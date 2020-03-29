@@ -40,7 +40,7 @@ $container = get_theme_mod('understrap_container_type');
 				<div class="nav-background">
 
 				</div>
-				<nav class="navbar-custom navbar-expand-md  bg-secondary col-md-10 col-8">
+				<nav class="navbar-custom navbar-expand-md  bg-secondary col-8 col-md-9 col-lg-9 col-xl-9 ">
 					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
@@ -77,8 +77,11 @@ $container = get_theme_mod('understrap_container_type');
 
 
 				</nav><!-- .site-navigation -->
-				<div id="social-icon-container" class="col-2 col-md-1">
-					<i class="fab fa-instagram"></i>
+				<div id="social-icon-container" class="col-2 col-md-2 col-lg-2 col-xl-2">
+					<i class="fa fa-instagram icon-instagram" title="Instagram"></i>
+					<i class="fa fa-facebook icon-facebook" title="Facebook"></i>
+					<i class="fa fa-map-marker icon-maps" title="Anfahrt"></i>
+					<i class="fa fa-envelope icon-contact" title="Kontakt"></i>
 				</div>
 			</div>
 		</div><!-- #wrapper-navbar end -->

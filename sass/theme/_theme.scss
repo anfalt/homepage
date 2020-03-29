@@ -1,0 +1,169 @@
+// This is an empty scss file for your custom styles - Please add your super duper awesome mega design styles here
+@media (min-width: 850px) {
+  .nav-background {
+    position: absolute;
+    display: block;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: $primary;
+    height: 19.3rem;
+    transform: translateY(-100%);
+    transform-origin: 0 0;
+    transition: transform 0.45s cubic-bezier(0.77, 0, 0.175, 1), box-shadow 0.3s;
+  }
+
+  .nav-link {
+    display: inline-block;
+    height: 3.25rem;
+    transition: opacity 0.3s, color 0.3s;
+    color: $gray-900;
+  }
+
+  #main-menu > .nav-item {
+    height: 4.735rem;
+    line-height: 3.735rem;
+  }
+
+  .dropdown-menu-flyout {
+    position: absolute;
+    top: 4.375rem;
+    left: 0;
+    right: 0;
+    height: 15rem;
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    visibility: hidden;
+    opacity: 0;
+    width: 40rem;
+    transition: opacity 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+  }
+
+  .dropdown-menu-flyout .dropdown-flyout-item {
+    font-size: 1.5rem;
+    padding: 0;
+    color: white;
+  }
+}
+
+#wrapper-navbar {
+  border-bottom: 1px solid $gray-400;
+}
+
+#wrapper-navbar.hovered .nav-link {
+  color: white;
+}
+
+.nav-background .container {
+  overflow: hidden;
+}
+
+.nav-item-divider {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-left: 10px;
+  margin-right: 5px;
+}
+
+#nav-container {
+  z-index: 20;
+  position: relative;
+}
+
+#wrapper-navbar:after {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: 25;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: opacity 0.3s;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  opacity: 0;
+}
+
+#wrapper-navbar.hovered:after {
+  opacity: 1;
+}
+
+#wrapper-navbar.hovered .nav-background {
+  transform: translateY(-14.5rem);
+  transition: transform 0.45s cubic-bezier(0.77, 0, 0.175, 1), box-shadow 0.3s;
+}
+
+#wrapper-navbar.hovered #logo-container-inverse {
+  opacity: 1;
+  display: block;
+}
+
+#logo-container-inverse {
+  opacity: 0;
+  display: none;
+}
+
+#wrapper-navbar.hovered #logo-container {
+  opacity: 0;
+  display: none;
+}
+
+#wrapper-navbar.link-hovered .nav-background {
+  transform: translateY(0);
+  transition: transform 0.65s cubic-bezier(0.77, 0, 0.175, 1), box-shadow 0.3s;
+  box-shadow: 0 0 164px 0 hsla(0, 0%, 7%, 0.5);
+}
+
+.nav-background {
+  transition: box-shadow 0.3s;
+}
+
+.nav-background .container {
+  overflow: hidden;
+}
+
+.dropdown-menu-flyout > li {
+  display: inline-block;
+}
+
+.menu-item-has-children.dropdown:hover .dropdown-menu-flyout {
+  display: block;
+  text-align: left;
+  position: absolute;
+  padding-left: 1rem;
+  visibility: visible;
+  opacity: 1;
+}
+
+i.dropdown-menu-arrow {
+  border: solid $primary;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+  top: -2px;
+  left: -4px;
+  position: relative;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+#wrapper-navbar.hovered i.dropdown-menu-arrow {
+  border: solid white;
+  border-width: 0 3px 3px 0;
+}
+
+.logo-container img {
+  max-width: 100px;
+  max-height: 70px;
+  width: auto;
+  height: auto;
+}
+
+.logo-container {
+  z-index: 25;
+  position: relative;
+  transition: opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}

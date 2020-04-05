@@ -339,12 +339,12 @@ function score_cron_schedules($schedules)
 function handle_get_team_data()
 {
 
-    $combinedTeamsData = array();
-    $combinedTeamsData["teams"] = getAllRowsFromTable(TABLE_NAME_TEAMS);
-    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES);
-    $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamScores, "teamScores");
-    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES);
+
+    $combinedTeamsData = getAllRowsFromTable(TABLE_NAME_TEAMS);
+    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES);
     $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamTables, "teamRankings");
+    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES);
+    $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamScores, "teamScores");
     return $combinedTeamsData;
 }
 
@@ -352,15 +352,14 @@ function enrichTeamData($teamData, $additionalData, $enrichedPropName)
 {
     $enrichedTeams = @array();
     foreach ($teamData as $team) {
-
-        $enrichData = null;
+        $team->$enrichedPropName = @array();
+        $enrichData = @array();
         foreach ($additionalData as $dataItem) {
             if ($team->teamId == $dataItem->teamId) {
-                $enrichData = $dataItem;
-                break;
+                array_push($enrichData, $dataItem);
             }
         }
-        $team[$enrichedPropName] = $enrichData;
+        $team->$enrichedPropName = $enrichData;
         array_push($enrichedTeams, $team);
     }
     return $enrichedTeams;

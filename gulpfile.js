@@ -28,7 +28,7 @@ var paths = cfg.paths;
 // Compiles SCSS files in CSS
 gulp.task("sass", function () {
   var stream = gulp
-    .src(paths.sass + "/*.scss")
+    .src(paths.sass + "**/*.scss")
     .pipe(
       plumber({
         errorHandler: function (err) {
@@ -49,7 +49,7 @@ gulp.task("sass", function () {
 // gulp watch
 // Starts watcher. Watcher runs gulp sass task on changes
 gulp.task("watch", function () {
-  gulp.watch(`${paths.sass}/**/*.scss`, gulp.series("styles"));
+  gulp.watch(`**/**/*.scss`, gulp.series("styles"));
   gulp.watch(
     [
       `${paths.dev}/js/**/*.js`,

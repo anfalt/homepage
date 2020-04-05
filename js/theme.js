@@ -7088,13 +7088,25 @@
     }
 
     function handleLoadedTeamData(data) {
-      processData(data); //  displayTeamContainers(data["teams"]);
+      displayTeamContainers(data);
     }
 
-    function processData(data) {
-      data["teams"].forEach(element => {
-        debugger;
-      });
+    function displayTeamContainers(teams) {
+      function collapseTeamTemplate(team) {
+        return `
+        <a class="btn-link" data-toggle="collapse" href="#collapse-${team.teamId}"  aria-controls="collapse-${team.teamId}">
+        <h3>${team.teamName}</h3>
+      </a>
+      <div class="collapse" id="collapse-${team.teamId}">   
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+     </div>
+     </div>    `;
+      }
+
+      var teamsHTML = teams.map(collapseTeamTemplate);
+      $(teamsContainer).hide();
+      $(teamsContainer).html(teamsHTML);
+      $(teamsContainer).show();
     }
 
     function errorCallBack(jqXHR) {

@@ -207,18 +207,34 @@ function getScoreFromRow($scoreRow, $additionalIndex)
     if ($scoreReportTag = $scoreRow->children(5 + $additionalIndex)->find("a")) {
         $scoreReportURL = $scoreReportTag[0]->attr["href"];
     }
-
+    $dateInMilliSeconds = DateTime::createFromFormat('d.m.Y H:i', adaptString($scoreTime), new DateTimeZone("Europe/Berlin"))
+        ->getTimestamp() * 1000;
     $scoreData = array(
-        'scoreDateTime' =>  DateTime::createFromFormat('d.m.Y H:i', adaptString($scoreTime))->format('Y-m-d H:i'),
+        'scoreDateTime' =>  $dateInMilliSeconds,
         'scoreHostTeam' =>  adaptString($scoreHostTeam),
-        'scoreHostTeamURL' =>  adaptString(NU_LIGA_HOST . $scoreHostTeamURL),
         'scoreGuestTeam' =>  adaptString($scoreGuestTeam),
-        'scoreGuestTeamURL' =>  adaptString(NU_LIGA_HOST . $scoreGuestTeamURL),
         'scoreMatchPoints' =>  adaptString($scoreMatchPoints),
-        'scoreReportURL' =>  adaptString(NU_LIGA_HOST . $scoreReportURL)
+
 
 
     );
+
+    if (adaptString($scoreHostTeamURL) !== "") {
+        $scoreHostTeamURL =  adaptString(NU_LIGA_HOST . $scoreHostTeamURL);
+    }
+    $scoreData["scoreHostTeamURL"] = $scoreHostTeamURL;
+
+    if (adaptString($scoreGuestTeamURL) !== "") {
+        $scoreGuestTeamURL =  adaptString(NU_LIGA_HOST . $scoreGuestTeamURL);
+    }
+    $scoreData["scoreGuestTeamURL"] = $scoreGuestTeamURL;
+
+
+    if (adaptString($scoreReportURL) !== "") {
+        $scoreReportURL =  adaptString(NU_LIGA_HOST . $scoreReportURL);
+    }
+    $scoreData["scoreReportURL"] = $scoreReportURL;
+
     return $scoreData;
 }
 

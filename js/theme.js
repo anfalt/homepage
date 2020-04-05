@@ -7125,7 +7125,8 @@
       <h3>${team.teamName}</h3>
       </a>
       <div class="collapse" id="collapse-${team.teamId}">   
-         ${teamTableTemplate(team)}
+        ${teamTableTemplate(team)}
+        ${teamScoresTemplate(team)}
        </div>`;
     }
 
@@ -7143,17 +7144,16 @@
           </tr>
         </thead>
         <tbody>
-         ${team.teamRankings.map(teamRankingRow)}
+         ${team.teamRankings.map(teamRankingRow).join("")}
         </tbody>
       </table>`;
     }
 
     function teamRankingRow(teamRank) {
-      return `
-      <tr>
+      return `<tr>
         <td>${teamRank.ranking}</td>
         <td>
-          <a href="${teamRank.teamUrl} target="_blank">"${teamRank.teamName}</a>
+        ${createLinkTag(teamRank.teamUrl, teamRank.teamName)}
         </td>
         <td>${teamRank.matches}</td>
         <td>${teamRank.points}</td>
@@ -7161,6 +7161,52 @@
         <td>${teamRank.sets}</td>
         <td>${teamRank.games}</td>
       </tr>`;
+    }
+
+    function teamScoresTemplate(team) {
+      return `<table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Datum</th>
+          <th scope="col">Heimannschaft</th>
+          <th scope="col">Gastmannschaft</th>
+          <th scope="col">Matchpunkte</th>
+          <th scope="col">Spielbericht</th>
+        </tr>
+      </thead>
+      <tbody>
+       ${team.teamScores.map(teamScoreRow).join("")}
+      </tbody>
+    </table>`;
+    }
+
+    function teamScoreRow(teamScore) {
+      return `<tr>
+      <td>${new Date(parseInt(teamScore.scoreDateTime)).toLocaleDateString()} ${new Date(parseInt(teamScore.scoreDateTime)).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}</td>
+      <td>
+       ${createLinkTag(teamScore.scoreHostTeamURL, teamScore.scoreHostTeam)}
+      </td>
+      <td>
+      ${createLinkTag(teamScore.scoreGuestTeamURL, teamScore.scoreGuestTeam)}
+      </td>
+      <td>${teamScore.scoreMatchPoints}</td>
+      <td> ${createLinkTag(teamScore.scoreReportURL, "Spielbericht öffnen", true)}</td>
+    </tr>`;
+    }
+
+    function createLinkTag(link, linkName, hideifEmptyLink) {
+      if (link) {
+        return `
+          <a href="${link}" target="_blank">${linkName}</a>
+         `;
+      } else if (hideifEmptyLink) {
+        return "";
+      } else {
+        return linkName;
+      }
     }
   });
 })(jQuery);

@@ -19,20 +19,11 @@
     }
 
     function displayTeamContainers(teams) {
-      function collapseTeamTemplate(team) {
-        return `
-        <a class="btn-link" data-toggle="collapse" href="#collapse-${team.teamId}"  aria-controls="collapse-${team.teamId}">
-        <h3>${team.teamName}</h3>
-      </a>
-      <div class="collapse" id="collapse-${team.teamId}">   
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-     </div>
-     </div>    `;
-      }
-      var teamsHTML = teams.map(collapseTeamTemplate);
-      $(teamsContainer).hide();
+      var teamsHTML = teams.map(function (el) {
+        return collapseTeamTemplate(el);
+      });
       $(teamsContainer).html(teamsHTML);
-      $(teamsContainer).show();
+      $(teamsContainer).css({ opacity: 1 });
     }
 
     function errorCallBack(jqXHR) {
@@ -51,6 +42,50 @@
       } else {
         alert("Uncaught Error.\n" + jqXHR.responseText);
       }
+    }
+    function collapseTeamTemplate(team) {
+      return `
+      <a class="btn-link" data-toggle="collapse" href="#collapse-${
+        team.teamId
+      }"  aria-controls="collapse-${team.teamId}">
+      <h3>${team.teamName}</h3>
+      </a>
+      <div class="collapse" id="collapse-${team.teamId}">   
+         ${teamTableTemplate(team)}
+       </div>`;
+    }
+    function teamTableTemplate(team) {
+      return `<table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Mannschaft</th>
+            <th scope="col">Beg.</th>
+            <th scope="col">Punkte</th>
+            <th scope="col">Matchbilanz</th>
+            <th scope="col">Sätze</th>
+            <th scope="col">Spiele</th>
+          </tr>
+        </thead>
+        <tbody>
+         ${team.teamRankings.map(teamRankingRow)}
+        </tbody>
+      </table>`;
+    }
+
+    function teamRankingRow(teamRank) {
+      return `
+      <tr>
+        <td>${teamRank.ranking}</td>
+        <td>
+          <a href="${teamRank.teamUrl} target="_blank">"${teamRank.teamName}</a>
+        </td>
+        <td>${teamRank.matches}</td>
+        <td>${teamRank.points}</td>
+        <td>${teamRank.matchPoints}</td>
+        <td>${teamRank.sets}</td>
+        <td>${teamRank.games}</td>
+      </tr>`;
     }
   });
 })(jQuery);

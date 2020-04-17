@@ -156,3 +156,19 @@
   height: auto;
   min-height: 140px;
 }
+.tribe-events-cal-links > a {
+  color: $secondary;
+  font-weight: bold;
+  text-decoration: none;
+  margin-right: 15px;
+}
+
+.tribe-events-single-event-title {
+  margin-bottom: 10px;
+}
+
+.tribe-events-back > a {
+  color: $secondary;
+  margin-bottom: 5px;
+  font-weight: bold;
+}

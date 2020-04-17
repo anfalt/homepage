@@ -17,6 +17,13 @@ if (!wp_next_scheduled('startScoreAndTableSync')) {
 
 
 
+add_action('startEventsSync', 'startEventsSync');
+//register event forupdating scores hourly
+if (!wp_next_scheduled('startEventsSync')) {
+    wp_schedule_event(time(), 'daily', 'startEventsSync');
+}
+
+
 //register custom endpoint for teams data
 add_action('rest_api_init', function () {
     register_rest_route('custom-api/v1', '/teams', array(
@@ -64,6 +71,104 @@ function startScoreAndTableSync()
 {
     startScoreSync();
     startTableSync();
+}
+
+function startEventsSync()
+{
+    deleteExistingScoreEvents();
+
+    $teamData = getCombinedTeamData();
+    foreach ($teamData as $team) {
+        foreach ($team->teamScores as $score) {
+            $postId = addEventPostForScore($score);
+        }
+    }
+}
+
+
+
+function addEventPostForScore($score)
+{
+    $guest = $score->scoreGuestTeam;
+    $host = $score->scoreHostTeam;
+    $guestLink = $score->scoreGuestTeamURL;
+    $hostLink = $score->scoreHostTeamURL;
+
+
+    $postContent = "Medenspiel ";
+
+    if (strpos($host, '1860 Rosenheim')) {
+        $postContent = "Heimspiel: ";
+    } else if (strpos($guest, '1860 Rosenheim')) {
+        $postContent = "Auwärtsspiel: ";
+    }
+
+    if ($hostLink) {
+        $postContent .= "<a href='" . $hostLink . "' target='_blank'>" . $host . "</a> - " . $guest;
+    } elseif ($guestLink) {
+        $postContent .= $host . " - <a href='" . $guestLink . "' target='_blank'>" . $guest . "</a>";
+    } else {
+        $postContent .=  $host .  " - " . $guest;
+    }
+
+
+    $startDate =  new DateTime('@'  . $score->scoreDateTime / 1000);
+    $startDate->setTimezone(new DateTimeZone("Europe/Berlin"));
+    $startDateString = $startDate->format('Y-m-d');
+    $startHourString = $startDate->format('H');
+    $startMinuteString = $startDate->format('i');
+
+
+    $endDate =  new DateTime('@'  . ($score->scoreDateTime / 1000 + 18000));
+    $endDate->setTimezone(new DateTimeZone("Europe/Berlin"));
+    $endDateString = $endDate->format('Y-m-d');
+    $endHourString = $endDate->format('H');
+    $endMinuteString = $endDate->format('i');
+
+
+
+
+    $event_id = Tribe__Events__API::createEvent(
+        array(
+            'post_title' => $host . " - " . $guest,
+            'post_status' => 'publish',
+            'post_content' => $postContent,
+            'EventStartDate' => $startDateString,
+            'EventEndDate' => $endDateString,
+            'EventStartHour' => $startHourString,
+            'EventStartMinute' => $startMinuteString,
+            'EventEndHour' => $endHourString,
+            'EventEndMinute' => $endMinuteString,
+            'comment_status' => 'closed',
+            ''
+        )
+    );
+    wp_set_object_terms($event_id, 22, 'tribe_events_cat', false);
+    return $event_id;
+}
+
+function deleteExistingScoreEvents()
+{
+
+    $args =
+        array(
+            'post_type' => 'tribe_events',
+            'numberposts' => -1,
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'tribe_events_cat',
+                    'field' => 'term_id',
+                    'terms' => 22,
+
+                )
+            )
+        );
+
+    $query = new WP_Query($args);
+    $posts = $query->posts;
+    foreach ($posts as $post) {
+        wp_delete_post($post->ID);
+    }
 }
 
 function getTeamsDataFromHTML($html)
@@ -353,6 +458,11 @@ function score_cron_schedules($schedules)
 }
 
 function handle_get_team_data()
+{
+    return getCombinedTeamData();
+}
+
+function getCombinedTeamData()
 {
 
 

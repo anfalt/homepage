@@ -1,44 +1,65 @@
-(function($) {
-  $(document).ready(function() {
+(function ($) {
+  $(document).ready(function () {
     registerHoverEventsNavigation();
     registerSocialIconClickHandler();
   });
 
   function registerSocialIconClickHandler() {
-    $(".icon-facebook").click(function() {
+    $(".icon-facebook").click(function () {
       window.open("https://www.facebook.com/tennis1860rosenheim", "_blank");
     });
-    $(".icon-instagram").click(function() {
+    $(".icon-instagram").click(function () {
       window.open("https://www.instagram.com/tsv1860rosenheimtennis", "_blank");
     });
-    $(".icon-maps").click(function() {
+    $(".icon-maps").click(function () {
       window.open("https://goo.gl/maps/M8E3okzFtmSRsKur7", "_blank");
     });
-    $(".icon-contact").click(function() {
-      window.open("/", "_self");
+    $(".icon-contact").click(function () {
+      window.open("/kontakt", "_self");
     });
   }
 
   function registerHoverEventsNavigation() {
     var navigationMainLinks = $("li.dropdown");
     var navWrapper = $("#wrapper-navbar");
-    var navBar = $(".navbar-custom");
 
     //event handler to extend nav background if submenu is displayed
+    var navMainHovertimeout = null;
+    var navLinkHovertimeout = null;
+    var hoverDelay = 100;
+
     navigationMainLinks.hover(
-      function() {
-        navWrapper.addClass("link-hovered");
+      function () {
+        if (navLinkHovertimeout) {
+          clearTimeout(navLinkHovertimeout);
+        }
+        navLinkHovertimeout = setTimeout(function () {
+          navWrapper.addClass("link-hovered");
+        }, hoverDelay);
       },
-      function(el) {
-        navWrapper.removeClass("link-hovered");
+      function () {
+        if (navLinkHovertimeout) {
+          clearTimeout(navLinkHovertimeout);
+        }
+        navLinkHovertimeout = setTimeout(function () {
+          navWrapper.removeClass("link-hovered");
+        }, hoverDelay);
       }
     );
 
     navWrapper.hover(
-      function() {
-        navWrapper.addClass("hovered");
+      function () {
+        if (navMainHovertimeout) {
+          clearTimeout(navMainHovertimeout);
+        }
+        navMainHovertimeout = setTimeout(function () {
+          navWrapper.addClass("hovered");
+        }, hoverDelay);
       },
-      function() {
+      function () {
+        if (navMainHovertimeout) {
+          clearTimeout(navMainHovertimeout);
+        }
         navWrapper.removeClass("hovered");
       }
     );

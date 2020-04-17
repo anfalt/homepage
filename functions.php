@@ -28,7 +28,8 @@ $understrap_includes = array(
 	'/editor.php',                          // Load Editor functions.
 	'/deprecated.php',                      // Load deprecated functions.
 	'/customScoreFunctions.php',
-	'/customScoreSettings.php'
+	'/customScoreSettings.php',
+	'/customFunctions.php'
 );
 
 foreach ($understrap_includes as $file) {

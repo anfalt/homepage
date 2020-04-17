@@ -1,17 +1,11 @@
-(function ($, WP_1860_Teams) {
+(function ($) {
   $(document).ready(function () {
     var teamsContainer = $("#teamsContainer")[0];
     if (teamsContainer) {
       initTeams();
     }
     function initTeams() {
-      loadTeamData().success(handleLoadedTeamData).error(errorCallBack);
-    }
-
-    function loadTeamData() {
-      return $.ajax({
-        url: "/wp-json/custom-api/v1/teams",
-      });
+      WP_1860.getData("/wp-json/custom-api/v1/teams", handleLoadedTeamData);
     }
 
     function handleLoadedTeamData(data) {
@@ -24,25 +18,19 @@
       });
       $(teamsContainer).html(teamsHTML);
       $(teamsContainer).css({ opacity: 1 });
+      //$(".teamMatches").hide();
+      // $(".showTeamMatches").click(function (event) {
+      //   var teamId = $(event.target).data("teamid");
+      //   $("#teamTable-" + teamId).hide();
+      //   $("#teamMatches-" + teamId).show();
+      // });
+      // $(".showTeamRanking").click(function (event) {
+      //   var teamId = $(event.target).data("teamid");
+      //   $("#teamMatches-" + teamId).hide();
+      //   $("#teamTable-" + teamId).show();
+      // });
     }
 
-    function errorCallBack(jqXHR) {
-      if (jqXHR.status === 0) {
-        alert("Not connect.\n Verify Network.");
-      } else if (jqXHR.status == 404) {
-        alert("Requested page not found. [404]");
-      } else if (jqXHR.status == 500) {
-        alert("Internal Server Error [500].");
-      } else if (exception === "parsererror") {
-        alert("Requested JSON parse failed.");
-      } else if (exception === "timeout") {
-        alert("Time out error.");
-      } else if (exception === "abort") {
-        alert("Ajax request aborted.");
-      } else {
-        alert("Uncaught Error.\n" + jqXHR.responseText);
-      }
-    }
     function collapseTeamTemplate(team) {
       return `
       <a class="btn-link" data-toggle="collapse" href="#collapse-${
@@ -50,13 +38,29 @@
       }"  aria-controls="collapse-${team.teamId}">
       <h3>${team.teamName}</h3>
       </a>
-      <div class="collapse" id="collapse-${team.teamId}">   
+      <div class="collapse" id="collapse-${team.teamId}"> 
+      <ul class="nav nav-pills" role="tablist">
+       <li class="nav-item">
+         <a href='#teamTable-${
+           team.teamId
+         }' class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamTable-${team.teamId}" id="teamTable-${team.teamId}-tab">Tabelle</a>
+        </li>
+        <li class="nav-item">
+        <a href="#teamMatches-${
+          team.teamId
+        }" class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamMatches-${team.teamId}" id="teamMatches-${team.teamId}-tab">Begegnungen</a>
+        </li>
+      </ul>  
+      <div class="tab-content">
         ${teamTableTemplate(team)}
         ${teamScoresTemplate(team)}
+      </div>
        </div>`;
     }
     function teamTableTemplate(team) {
-      return `<table class="table">
+      return `<table class="table tab-pane fade show active teamTable" role="tabpanel" aria-labelledby="teamTable-${
+        team.teamId
+      }-tab" id="teamTable-${team.teamId}" >
         <thead>
           <tr>
             <th scope="col">Rang</th>
@@ -89,7 +93,9 @@
     }
 
     function teamScoresTemplate(team) {
-      return `<table class="table">
+      return `<table class="table tab-pane fade teamMatches" role="tabpanel" id="teamMatches-${
+        team.teamId
+      }" aria-labelledby="teamTable-${team.teamId}-tab">
       <thead>
         <tr>
           <th scope="col">Datum</th>

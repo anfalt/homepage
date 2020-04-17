@@ -7031,6 +7031,89 @@
     }, false);
   }
 })();
+(function ($, WP_1860) {
+  WP_1860.getData = function (url, successCallback) {
+    $.ajax({
+      url: url
+    }).success(successCallback).error(WP_1860.errorCallBack);
+  };
+
+  WP_1860.errorCallBack = function (jqXHR) {
+    if (jqXHR.status === 0) {
+      console.log("Not connect.\n Verify Network.");
+    } else if (jqXHR.status == 404) {
+      console.log("Requested page not found. [404]");
+    } else if (jqXHR.status == 500) {
+      console.log("Internal Server Error [500].");
+    } else if (exception === "parsererror") {
+      console.log("Requested JSON parse failed.");
+    } else if (exception === "timeout") {
+      console.log("Time out error.");
+    } else if (exception === "abort") {
+      console.log("Ajax request aborted.");
+    } else {
+      console.log("Uncaught Error.\n" + jqXHR.responseText);
+    }
+  };
+
+  $(document).ready(function () {
+    $(window).on("load", function () {
+      $(window).scroll(function () {
+        var windowBottom = $(this).scrollTop() + $(this).innerHeight();
+        $(".fadeInOnScroll").each(function () {
+          /* Check the location of each desired element */
+          var objectBottom = $(this).offset().top + $(this).outerHeight() / 2;
+          /* If the element is completely within bounds of the window, fade it in */
+
+          if (objectBottom < windowBottom) {
+            //object comes into view (scrolling down)
+            if ($(this).css("opacity") == 0) {
+              $(this).css({
+                opacity: 1
+              });
+            }
+          }
+        });
+      }).scroll(); //invoke scroll-handler on page-load
+    });
+  });
+})(jQuery, window["WP_1860"] ? window["WP_1860"] : window["WP_1860"] = {});
+(function ($) {
+  $(document).ready(function () {
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var form = $("form.contactForm")[0];
+
+    if (!form) {
+      return;
+    } // Loop over them and prevent submission
+
+
+    form.addEventListener("submit", function (event) {
+      $(".contactForm #submit").prop("disabled", true);
+      event.preventDefault();
+      event.stopPropagation();
+      var isFormValid = form.checkValidity();
+      form.classList.add("was-validated");
+
+      if (isFormValid === true) {
+        $.post("../wp-content/themes/understrap/sendMail.php", {
+          mail: $(".contactForm #eMail").val(),
+          givenName: $(".contactForm #givenName").val(),
+          familyName: $(".contactForm #familyName").val(),
+          message: $(".contactForm #message").val()
+        }, function (data) {
+          if (data == "true") {
+            $("#messageSendingSuccess").show();
+          } else {
+            $("#messageSendingFailed").show();
+          }
+
+          $(".contactForm #submit").prop("disabled", false);
+        });
+      }
+    }, false);
+  });
+})(jQuery);
 (function ($) {
   $(document).ready(function () {
     registerHoverEventsNavigation();
@@ -7048,28 +7131,161 @@
       window.open("https://goo.gl/maps/M8E3okzFtmSRsKur7", "_blank");
     });
     $(".icon-contact").click(function () {
-      window.open("/", "_self");
+      window.open("/kontakt", "_self");
     });
   }
 
   function registerHoverEventsNavigation() {
     var navigationMainLinks = $("li.dropdown");
-    var navWrapper = $("#wrapper-navbar");
-    var navBar = $(".navbar-custom"); //event handler to extend nav background if submenu is displayed
+    var navWrapper = $("#wrapper-navbar"); //event handler to extend nav background if submenu is displayed
 
+    var navMainHovertimeout = null;
+    var navLinkHovertimeout = null;
+    var hoverDelay = 100;
     navigationMainLinks.hover(function () {
-      navWrapper.addClass("link-hovered");
-    }, function (el) {
-      navWrapper.removeClass("link-hovered");
+      if (navLinkHovertimeout) {
+        clearTimeout(navLinkHovertimeout);
+      }
+
+      navLinkHovertimeout = setTimeout(function () {
+        navWrapper.addClass("link-hovered");
+      }, hoverDelay);
+    }, function () {
+      if (navLinkHovertimeout) {
+        clearTimeout(navLinkHovertimeout);
+      }
+
+      navLinkHovertimeout = setTimeout(function () {
+        navWrapper.removeClass("link-hovered");
+      }, hoverDelay);
     });
     navWrapper.hover(function () {
-      navWrapper.addClass("hovered");
+      if (navMainHovertimeout) {
+        clearTimeout(navMainHovertimeout);
+      }
+
+      navMainHovertimeout = setTimeout(function () {
+        navWrapper.addClass("hovered");
+      }, hoverDelay);
     }, function () {
+      if (navMainHovertimeout) {
+        clearTimeout(navMainHovertimeout);
+      }
+
       navWrapper.removeClass("hovered");
     });
   }
 })(jQuery);
-(function ($, WP_1860_Teams) {
+(function ($) {
+  $(document).ready(function () {
+    var sponsorContainer = $("#homePageSponsors")[0];
+    var postsContainer = $("#homePagePosts")[0];
+    var latestMatches = $("#resultsAndUpcomingMatches")[0];
+
+    if (postsContainer) {
+      initHomePagePosts();
+    }
+
+    if (latestMatches) {
+      initLatestMatches();
+    }
+
+    if (sponsorContainer) {
+      initHomePageSponsors();
+    }
+
+    function initLatestMatches() {
+      WP_1860.getData("/wp-json/custom-api/v1/teams", renderLatestMatches);
+    }
+
+    function initHomePageSponsors() {
+      WP_1860.getData("/wp-json/custom-api/v1/images/homePageSponsors", renderHomePageSponsors);
+    }
+
+    function initHomePagePosts() {
+      WP_1860.getData("/wp-json/wp/v2/posts?_embed&categories=17", renderLoadedHomePagePosts);
+    }
+
+    function renderLoadedHomePagePosts(data) {
+      var posts = data;
+      var postsHtml = posts.map(processPostData).map(function (el) {
+        return homePagePostsTemplate(el);
+      });
+      $(postsContainer).html(postsHtml);
+      $(postsContainer).css({
+        opacity: 1
+      });
+    }
+
+    function renderHomePageSponsors(data) {
+      var images = data.posts;
+      var sponsorsHTML = images.map(homePageSponsorsTemplate);
+      $(sponsorContainer).html(sponsorsHTML);
+      $(sponsorContainer).css({
+        opacity: 1
+      });
+    }
+
+    function renderLatestMatches(data) {
+      var latestMatchesHTML = data.map(latestMatchesTemplate);
+      $(latestMatches).html(latestMatchesHTML);
+      $(latestMatches).css({
+        opacity: 1
+      });
+    }
+
+    function processPostData(el) {
+      var title = el.title.rendered;
+      var imageUrl = "";
+
+      try {
+        imageUrl = el._embedded["wp:featuredmedia"][0].media_details.sizes.medium ? el._embedded["wp:featuredmedia"][0].media_details.sizes.medium.source_url : el._embedded["wp:featuredmedia"][0].media_details.sizes.full.source_url;
+      } catch (ex) {
+        console.log(ex);
+      }
+
+      var excerpt = el.excerpt.rendered;
+      var link = el.link;
+      return {
+        title: title,
+        imageUrl: imageUrl,
+        excerpt: excerpt,
+        link: link
+      };
+    }
+
+    function latestMatchesTemplate(team) {
+      return `<p>example</p>`;
+    }
+
+    function homePageSponsorsTemplate(sponsor) {
+      return `<div class="sponsor fadeInOnScroll">
+                <a href="${sponsor.post_excerpt}" target="_blank">
+                    <img src="${sponsor.guid}" alt="${sponsor.post_title}"/>
+                </a>
+            </div>`;
+    }
+
+    function homePagePostsTemplate(post) {
+      return `<div class="post container fadeInOnScroll">
+                    <div class="row no-gutters">
+                        <div class="postImageContainer col-4">
+                            <a href="${post.link}">
+                                <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>
+                            </a>
+                        </div>
+                        <div class="col-8 postTextContainer">
+                            <div class="px-3">
+                                <h4 >${post.title}</h4>
+                               ${post.excerpt}
+                            </div>
+                        </div>
+                </div>   
+            </div>`;
+    }
+  });
+})(jQuery);
+(function ($) {
   $(document).ready(function () {
     var teamsContainer = $("#teamsContainer")[0];
 
@@ -7078,13 +7294,7 @@
     }
 
     function initTeams() {
-      loadTeamData().success(handleLoadedTeamData).error(errorCallBack);
-    }
-
-    function loadTeamData() {
-      return $.ajax({
-        url: "/wp-json/custom-api/v1/teams"
-      });
+      WP_1860.getData("/wp-json/custom-api/v1/teams", handleLoadedTeamData);
     }
 
     function handleLoadedTeamData(data) {
@@ -7098,25 +7308,17 @@
       $(teamsContainer).html(teamsHTML);
       $(teamsContainer).css({
         opacity: 1
-      });
-    }
-
-    function errorCallBack(jqXHR) {
-      if (jqXHR.status === 0) {
-        alert("Not connect.\n Verify Network.");
-      } else if (jqXHR.status == 404) {
-        alert("Requested page not found. [404]");
-      } else if (jqXHR.status == 500) {
-        alert("Internal Server Error [500].");
-      } else if (exception === "parsererror") {
-        alert("Requested JSON parse failed.");
-      } else if (exception === "timeout") {
-        alert("Time out error.");
-      } else if (exception === "abort") {
-        alert("Ajax request aborted.");
-      } else {
-        alert("Uncaught Error.\n" + jqXHR.responseText);
-      }
+      }); //$(".teamMatches").hide();
+      // $(".showTeamMatches").click(function (event) {
+      //   var teamId = $(event.target).data("teamid");
+      //   $("#teamTable-" + teamId).hide();
+      //   $("#teamMatches-" + teamId).show();
+      // });
+      // $(".showTeamRanking").click(function (event) {
+      //   var teamId = $(event.target).data("teamid");
+      //   $("#teamMatches-" + teamId).hide();
+      //   $("#teamTable-" + teamId).show();
+      // });
     }
 
     function collapseTeamTemplate(team) {
@@ -7124,14 +7326,24 @@
       <a class="btn-link" data-toggle="collapse" href="#collapse-${team.teamId}"  aria-controls="collapse-${team.teamId}">
       <h3>${team.teamName}</h3>
       </a>
-      <div class="collapse" id="collapse-${team.teamId}">   
+      <div class="collapse" id="collapse-${team.teamId}"> 
+      <ul class="nav nav-pills" role="tablist">
+       <li class="nav-item">
+         <a href='#teamTable-${team.teamId}' class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamTable-${team.teamId}" id="teamTable-${team.teamId}-tab">Tabelle</a>
+        </li>
+        <li class="nav-item">
+        <a href="#teamMatches-${team.teamId}" class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamMatches-${team.teamId}" id="teamMatches-${team.teamId}-tab">Begegnungen</a>
+        </li>
+      </ul>  
+      <div class="tab-content">
         ${teamTableTemplate(team)}
         ${teamScoresTemplate(team)}
+      </div>
        </div>`;
     }
 
     function teamTableTemplate(team) {
-      return `<table class="table">
+      return `<table class="table tab-pane fade show active teamTable" role="tabpanel" aria-labelledby="teamTable-${team.teamId}-tab" id="teamTable-${team.teamId}" >
         <thead>
           <tr>
             <th scope="col">Rang</th>
@@ -7164,7 +7376,7 @@
     }
 
     function teamScoresTemplate(team) {
-      return `<table class="table">
+      return `<table class="table tab-pane fade teamMatches" role="tabpanel" id="teamMatches-${team.teamId}" aria-labelledby="teamTable-${team.teamId}-tab">
       <thead>
         <tr>
           <th scope="col">Datum</th>

@@ -2,5 +2,12 @@
 // To overwrite a Bootstrap variable you don´t have to touch the Bootstrap folder.
 // Just copy a variable from src/sass/bootstrap4/_variables.scss, paste it here and edit the value.
 
-$primary: #ee232b;
-$secondary: #fff;
+$primary: #000;
+$secondary: #ee232b;
+$enable-validation-icons: false;
+$border-radius: 0;
+$input-focus-box-shadow: 0;
+$component-active-bg: $secondary;
+$input-focus-border-color: #8e1519;
+$success: #000;
+$btn-focus-width: 0.1rem;

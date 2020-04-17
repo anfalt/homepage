@@ -40,7 +40,7 @@ $container = get_theme_mod('understrap_container_type');
 				<div class="nav-background">
 
 				</div>
-				<nav class="navbar-custom navbar-expand-md  bg-secondary col-8 col-md-9 col-lg-9 col-xl-9 ">
+				<nav class="navbar-custom navbar-expand-md   col-8 col-md-9 col-lg-9 col-xl-9 ">
 					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>

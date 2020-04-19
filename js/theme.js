@@ -7032,6 +7032,40 @@
   }
 })();
 (function ($, WP_1860) {
+  WP_1860.initPostContaier = function (index, el) {
+    var tags = $(el).data("tag");
+    WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (data) {
+      renderPosts(data, el);
+    });
+  };
+
+  function renderPosts(posts, postContainer) {
+    var postsHtml = posts.map(WP_1860.postsTemplate);
+    $(postContainer).html(postsHtml);
+    $(postContainer).css({
+      opacity: 1
+    });
+  }
+
+  WP_1860.postsTemplate = function (post) {
+    var excerpt = post.excerpt ? post.excerpt : post.content;
+    return `<div class="post container fadeInOnScroll">
+                  <div class="row no-gutters">
+                      <div class="postImageContainer col-4">
+                          <a href="${post.link}">
+                              <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>
+                          </a>
+                      </div>
+                      <div class="col-8 postTextContainer">
+                          <div class="px-3">
+                              <h4 >${post.title}</h4>
+                             ${excerpt}
+                          </div>
+                      </div>
+              </div>   
+          </div>`;
+  };
+
   WP_1860.getData = function (url, successCallback) {
     $.ajax({
       url: url
@@ -7056,6 +7090,14 @@
     }
   };
 
+  WP_1860.tagBadgesTemplates = function (tag) {
+    return `<span class="badge badge-secondary">${tag.name}</span>`;
+  };
+
+  $(document).ready(function () {
+    var postsContainer = $(".postsContainer");
+    postsContainer.each(WP_1860.initPostContaier);
+  });
   $(document).ready(function () {
     $(window).on("load", function () {
       $(window).scroll(function () {
@@ -7180,22 +7222,23 @@
   $(document).ready(function () {
     var sponsorContainer = $("#homePageSponsors")[0];
     var postsContainer = $("#homePagePosts")[0];
-    var latestMatches = $("#resultsAndUpcomingMatches")[0];
+    var upcomingEvents = $("#upcomingEvents")[0];
 
     if (postsContainer) {
       initHomePagePosts();
     }
 
-    if (latestMatches) {
-      initLatestMatches();
+    if (upcomingEvents) {
+      initUpcomingEvents();
     }
 
     if (sponsorContainer) {
       initHomePageSponsors();
     }
 
-    function initLatestMatches() {
-      WP_1860.getData("/wp-json/custom-api/v1/teams", renderLatestMatches);
+    function initUpcomingEvents() {
+      var url = getUpcomingEventRestUrl();
+      WP_1860.getData(url, renderUpcomingEvents);
     }
 
     function initHomePageSponsors() {
@@ -7203,14 +7246,12 @@
     }
 
     function initHomePagePosts() {
-      WP_1860.getData("/wp-json/wp/v2/posts?_embed&categories=17", renderLoadedHomePagePosts);
+      WP_1860.getData("/wp-json/custom-api/v1/allPosts?categories=homepage", renderLoadedHomePagePosts);
     }
 
     function renderLoadedHomePagePosts(data) {
       var posts = data;
-      var postsHtml = posts.map(processPostData).map(function (el) {
-        return homePagePostsTemplate(el);
-      });
+      var postsHtml = posts.map(WP_1860.postsTemplate);
       $(postsContainer).html(postsHtml);
       $(postsContainer).css({
         opacity: 1
@@ -7226,36 +7267,43 @@
       });
     }
 
-    function renderLatestMatches(data) {
-      var latestMatchesHTML = data.map(latestMatchesTemplate);
-      $(latestMatches).html(latestMatchesHTML);
-      $(latestMatches).css({
+    function renderUpcomingEvents(data) {
+      var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
+      $(upcomingEvents).html(upcomingEventsHTML);
+      $(upcomingEvents).css({
         opacity: 1
       });
     }
 
-    function processPostData(el) {
-      var title = el.title.rendered;
-      var imageUrl = "";
-
-      try {
-        imageUrl = el._embedded["wp:featuredmedia"][0].media_details.sizes.medium ? el._embedded["wp:featuredmedia"][0].media_details.sizes.medium.source_url : el._embedded["wp:featuredmedia"][0].media_details.sizes.full.source_url;
-      } catch (ex) {
-        console.log(ex);
-      }
-
-      var excerpt = el.excerpt.rendered;
-      var link = el.link;
-      return {
-        title: title,
-        imageUrl: imageUrl,
-        excerpt: excerpt,
-        link: link
-      };
-    }
-
-    function latestMatchesTemplate(team) {
-      return `<p>example</p>`;
+    function upcomingEventsTemplate(event) {
+      var eventDate = new Date(event.start_date);
+      return `<div class="upcomingEvent">
+      <div class="eventDateTimeContainer">
+      <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+        month: "short"
+      })}</span>
+      <span class="eventDateDay">${eventDate.toLocaleString("default", {
+        day: "2-digit"
+      })}</span>
+    
+      </div>
+      <div class="eventDetails">
+           <div class="eventHeader">
+           <div class="eventDateTime">${eventDate.toLocaleString("default", {
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      })}</div>
+             <div class="eventTags">
+              ${event.tags.map(WP_1860.tagBadgesTemplates)}
+            </div>
+           
+          </div>
+      <a href="${event.url}">
+          <span>${event.title}</span>
+      </a>
+      </div>
+  </div>`;
     }
 
     function homePageSponsorsTemplate(sponsor) {
@@ -7266,22 +7314,17 @@
             </div>`;
     }
 
-    function homePagePostsTemplate(post) {
-      return `<div class="post container fadeInOnScroll">
-                    <div class="row no-gutters">
-                        <div class="postImageContainer col-4">
-                            <a href="${post.link}">
-                                <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>
-                            </a>
-                        </div>
-                        <div class="col-8 postTextContainer">
-                            <div class="px-3">
-                                <h4 >${post.title}</h4>
-                               ${post.excerpt}
-                            </div>
-                        </div>
-                </div>   
-            </div>`;
+    function getCurrentDateWithWeekOffset(weekOffset) {
+      var now = new Date();
+      now.setDate(now.getDate() + weekOffset * 7);
+      return now;
+    }
+
+    function getUpcomingEventRestUrl() {
+      var baseUrl = "/wp-json/tribe/events/v1/events/";
+      var dateInNextTwoWeeks = getCurrentDateWithWeekOffset(2);
+      var filterStartDate = new Date().getFullYear() + "-" + ("0" + (new Date().getMonth() + 1)).slice(-2) + "-" + ("0" + new Date().getDate()).slice(-2);
+      return baseUrl + `?start_date=${filterStartDate}&per_page=100`;
     }
   });
 })(jQuery);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * View: Month View Mobile Day
  *
@@ -36,27 +37,27 @@
  */
 
 $events = $day['events'];
-if ( ! empty( $day['multiday_events'] ) ) {
-	$events = array_filter( array_merge( $day['multiday_events'], $events ) );
+if (!empty($day['multiday_events'])) {
+	$events = array_filter(array_merge($day['multiday_events'], $events));
 }
 $mobile_day_id = 'tribe-events-calendar-mobile-day-' . $day['year_number'] . '-' . $day['month_number'] . '-' . $day['day_number'];
 
-$classes = [ 'tribe-events-calendar-month-mobile-events__mobile-day' ];
-
-if ( $today_date === $day_date ) {
+$classes = ['tribe-events-calendar-month-mobile-events__mobile-day'];
+if ($today_date === $day_date) {
 	$classes[] = 'tribe-events-calendar-month-mobile-events__mobile-day--show';
 }
 ?>
 
-<div <?php tribe_classes( $classes ); ?> id="<?php echo sanitize_html_class( $mobile_day_id ); ?>">
-	<?php $this->template( 'month/mobile-events/mobile-day/day-marker', [ 'day_date' => $day_date ] ); ?>
+<div <?php tribe_classes($classes); ?> id="<?php echo sanitize_html_class($mobile_day_id); ?>">
 
-	<?php foreach( $events as $event ) : ?>
-		<?php $this->setup_postdata( $event ); ?>
+	<?php $this->template('month/mobile-events/mobile-day/day-marker', ['day_date' => $day_date]); ?>
 
-		<?php $this->template( 'month/mobile-events/mobile-day/mobile-event', [ 'event' => $event ] ); ?>
+	<?php foreach ($events as $event) : ?>
+		<?php $this->setup_postdata($event); ?>
+
+		<?php $this->template('month/mobile-events/mobile-day/mobile-event', ['event' => $event]); ?>
 
 	<?php endforeach; ?>
 
-	<?php $this->template( 'month/mobile-events/mobile-day/more-events', [ 'more_events' => $day['more_events'], 'more_url' => $day['day_url'] ] ); ?>
+	<?php $this->template('month/mobile-events/mobile-day/more-events', ['more_events' => $day['more_events'], 'more_url' => $day['day_url']]); ?>
 </div>

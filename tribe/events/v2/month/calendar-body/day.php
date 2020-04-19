@@ -36,7 +36,7 @@
  */
 
 $day_classes = ['tribe-events-calendar-month__day'];
-$day_button_classes = ['btn btn-secondary', 'tribe-events-calendar-month__day-cell', 'tribe-events-calendar-month__day-cell--mobile'];
+$day_button_classes = ['btn', 'tribe-events-calendar-month__day-cell', 'tribe-events-calendar-month__day-cell--mobile'];
 $day_number = $day['day_number'];
 $expanded = 'false';
 $selected = 'false';

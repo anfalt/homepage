@@ -33,6 +33,7 @@ $event_classes = tribe_get_post_class(['tribe-events-calendar-list__event', 'tri
 			<div class="tribe-events-calendar-list__event-details tribe-common-g-col">
 
 				<header class="tribe-events-calendar-list__event-header">
+					<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', ', ', '</span>'); ?>
 					<?php $this->template('list/event/date', ['event' => $event]); ?>
 					<?php $this->template('list/event/title', ['event' => $event]); ?>
 					<?php $this->template('list/event/venue', ['event' => $event]); ?>

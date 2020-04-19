@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Post rendering content according to caller of get_template_part.
  *
@@ -6,46 +7,42 @@
  */
 
 // Exit if accessed directly.
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 ?>
 
 <article <?php post_class(); ?> id="post-<?php the_ID(); ?>">
 
-	<header class="entry-header">
+	<div class="post container fadeInOnScroll">
+		<div class="row no-gutters">
 
-		<?php
-		the_title(
-			sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', esc_url( get_permalink() ) ),
-			'</a></h2>'
-		);
-		?>
+			<?php
+			if (get_the_post_thumbnail($post->ID, 'large') == '') {
+			} else {
+			?>
+				<div class="postImageContainer col-4">
+					<?php echo get_the_post_thumbnail($post->ID, 'large'); ?>
+				</div>
+			<?php }; ?>
 
-		<?php if ( 'post' == get_post_type() ) : ?>
 
-			<div class="entry-meta">
-				<?php understrap_posted_on(); ?>
-			</div><!-- .entry-meta -->
 
-		<?php endif; ?>
 
-	</header><!-- .entry-header -->
 
-	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
+			<div class="col-8 postTextContainer">
+				<div class="px-3">
+					<?php
+					the_title(
+						sprintf('<h4 ><a href="%s" rel="bookmark">', esc_url(get_permalink())),
+						'</a></h4>'
+					);
+					?>
+					<?php the_excerpt(); ?>
+				</div>
 
-	<div class="entry-content">
+			</div>
 
-		<?php the_excerpt(); ?>
-
-		<?php
-		wp_link_pages(
-			array(
-				'before' => '<div class="page-links">' . __( 'Pages:', 'understrap' ),
-				'after'  => '</div>',
-			)
-		);
-		?>
-
-	</div><!-- .entry-content -->
+		</div>
+	</div>
 
 	<footer class="entry-footer">
 

@@ -33,8 +33,9 @@ $event_id = get_the_ID();
 	<?php tribe_the_notices() ?>
 
 	<?php the_title('<h1 class="tribe-events-single-event-title">', '</h1>'); ?>
-
+	<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', ', ', '</span>'); ?>
 	<div class="tribe-events-schedule tribe-clearfix">
+
 		<?php echo tribe_events_event_schedule_details($event_id, '<h2>', '</h2>'); ?>
 		<?php if (tribe_get_cost()) : ?>
 			<span class="tribe-events-cost"><?php echo tribe_get_cost(null, true) ?></span>
@@ -52,6 +53,7 @@ $event_id = get_the_ID();
 		<div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 			<!-- Event featured image, but exclude link -->
 			<?php echo tribe_event_featured_image($event_id, 'full', false); ?>
+
 
 			<!-- Event content -->
 			<?php do_action('tribe_events_single_event_before_the_content') ?>

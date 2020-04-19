@@ -47,3 +47,58 @@
 #homePageSponsors .sponsor img:hover {
   transform: scale(1.05);
 }
+.upcomingEvent {
+  display: flex;
+  margin: 15px;
+  margin-left: 0;
+  min-height: 80px;
+}
+
+.eventDateTimeContainer {
+  margin: 10px;
+  margin-top: 0;
+  margin-bottom: 0;
+  min-width: 60px;
+  max-width: 60px;
+  background-color: #ee232b;
+  min-height: 60px;
+  max-height: 60px;
+  padding: 5px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.eventDateTime {
+  font-weight: bold;
+}
+.eventDetails {
+  width: 100%;
+}
+
+.eventDateMonth:after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 60px;
+  top: 30px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.02);
+}
+.eventDateDay {
+  font-size: 1.3rem;
+  font-weight: bold;
+  z-index: 20;
+}
+
+.eventHeader {
+  display: flex;
+  flex-direction: row;
+}
+.eventTags {
+  margin-left: auto;
+}

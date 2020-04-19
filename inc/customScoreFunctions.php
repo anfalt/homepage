@@ -32,6 +32,8 @@ add_action('rest_api_init', function () {
     ));
 });
 
+add_filter('the_posts', 'include_customfields_query');
+
 
 
 
@@ -62,8 +64,8 @@ function getHtml($url)
 
 function startTeamSync($url)
 {
-    // $teamsHTML = getHTML($url);
-    // $teamsData = getTeamsDataFromHTML($teamsHTML);
+    $teamsHTML = getHTML($url);
+    $teamsData = getTeamsDataFromHTML($teamsHTML);
     startScoreAndTableSync();
 }
 
@@ -75,42 +77,38 @@ function startScoreAndTableSync()
 
 function startEventsSync()
 {
-    deleteExistingScoreEvents();
+
 
     $teamData = getCombinedTeamData();
+    $allEvents =   GetAllMatchEventPosts();
+    $i = 0;
     foreach ($teamData as $team) {
         foreach ($team->teamScores as $score) {
-            $postId = addEventPostForScore($score);
+            addOrUpdateEventPostForScore($score, $team, $allEvents);
+            $i = $i + 1;
+            if ($i > 20) {
+                return;
+            }
         }
     }
 }
 
-
-
-function addEventPostForScore($score)
+function addOrUpdateEventPostForScore($score, $team, $allEvents)
 {
-    $guest = $score->scoreGuestTeam;
-    $host = $score->scoreHostTeam;
-    $guestLink = $score->scoreGuestTeamURL;
-    $hostLink = $score->scoreHostTeamURL;
+    $matchId = getMatchId($score);
+    $existingPost = $allEvents[$matchId];
 
 
-    $postContent = "Medenspiel ";
 
-    if (strpos($host, '1860 Rosenheim')) {
-        $postContent = "Heimspiel: ";
-    } else if (strpos($guest, '1860 Rosenheim')) {
-        $postContent = "Auwärtsspiel: ";
+    if ($existingPost == null) {
+        addEventPostForScore($score, $team);
+    } else if (!isEventDateUpToDate($score, $existingPost)) {
+        updateEventPost($score, $existingPost);
     }
+}
 
-    if ($hostLink) {
-        $postContent .= "<a href='" . $hostLink . "' target='_blank'>" . $host . "</a> - " . $guest;
-    } elseif ($guestLink) {
-        $postContent .= $host . " - <a href='" . $guestLink . "' target='_blank'>" . $guest . "</a>";
-    } else {
-        $postContent .=  $host .  " - " . $guest;
-    }
-
+function updateEventPost($score, $existingPost)
+{
 
     $startDate =  new DateTime('@'  . $score->scoreDateTime / 1000);
     $startDate->setTimezone(new DateTimeZone("Europe/Berlin"));
@@ -119,41 +117,158 @@ function addEventPostForScore($score)
     $startMinuteString = $startDate->format('i');
 
 
-    $endDate =  new DateTime('@'  . ($score->scoreDateTime / 1000 + 18000));
-    $endDate->setTimezone(new DateTimeZone("Europe/Berlin"));
-    $endDateString = $endDate->format('Y-m-d');
-    $endHourString = $endDate->format('H');
-    $endMinuteString = $endDate->format('i');
+
+
+
+
+    Tribe__Events__API::updateEvent(
+        $existingPost->ID,
+        array(
+            'EventStartDate' => $startDateString,
+            'EventStartHour' => $startHourString,
+            'EventStartMinute' => $startMinuteString,
+            'EventStartDate' => $startDateString,
+            'EventEndDate' => $startDateString,
+            'EventStartHour' => $startHourString,
+            'EventStartMinute' => $startMinuteString,
+            'EventEndHour' => $startHourString,
+            'EventEndMinute' => $startMinuteString,
+        )
+    );
+}
+
+function isEventDateUpToDate($score, $storedEvent)
+{
+    $startDate =  new DateTime('@'  . $score->scoreDateTime / 1000);
+    $startDate->setTimezone(new DateTimeZone("Europe/Berlin"));
+
+    $eventDatetime = new DateTime(
+        $storedEvent->custom_fields["_EventStartDate"][0],
+        new DateTimeZone($storedEvent->custom_fields["_EventTimezone"][0])
+    );
+
+    return $startDate == $eventDatetime;
+}
+
+
+
+
+
+function addEventPostForScore($score, $team)
+{
+
+
+    $postContent = getEventPostContent($score, $team);
+    $postTitle = getEventPostTitle($score, $team);
+    $postTags = getEventTags($score);
+
+    $matchId = getMatchId($score);
+
+    $startDate =  new DateTime('@'  . $score->scoreDateTime / 1000);
+    $startDate->setTimezone(new DateTimeZone("Europe/Berlin"));
+    $startDateString = $startDate->format('Y-m-d');
+    $startHourString = $startDate->format('H');
+    $startMinuteString = $startDate->format('i');
+
+
+
 
 
 
 
     $event_id = Tribe__Events__API::createEvent(
         array(
-            'post_title' => $host . " - " . $guest,
+            'post_title' => $postTitle,
             'post_status' => 'publish',
             'post_content' => $postContent,
             'EventStartDate' => $startDateString,
-            'EventEndDate' => $endDateString,
+            'EventEndDate' => $startDateString,
             'EventStartHour' => $startHourString,
             'EventStartMinute' => $startMinuteString,
-            'EventEndHour' => $endHourString,
-            'EventEndMinute' => $endMinuteString,
-            'comment_status' => 'closed',
-            ''
+            'EventEndHour' => $startHourString,
+            'EventEndMinute' => $startMinuteString,
+            'comment_status' => 'closed'
+
         )
     );
     wp_set_object_terms($event_id, 22, 'tribe_events_cat', false);
+    wp_set_object_terms($event_id, $postTags, "post_tag", false);
+
+    __update_post_meta($event_id, 'matchId', $matchId);
+
     return $event_id;
 }
 
-function deleteExistingScoreEvents()
+function getEventPostTitle($score, $team)
+{
+    $guest = $score->scoreGuestTeam;
+    $host = $score->scoreHostTeam;
+
+
+
+
+    $postTitle = "";
+
+
+    if (strpos($host, '1860 Rosenheim')) {
+        $postTitle =  $team->teamName . " - " . $guest;
+    } else if (strpos($guest, '1860 Rosenheim')) {
+        $postTitle =  $host . " - " . $team->teamName;
+    }
+
+    return $postTitle;
+}
+
+function getEventTags($score)
+{
+    $guest = $score->scoreGuestTeam;
+    $host = $score->scoreHostTeam;
+    $postTags = array();
+    if (strpos($host, '1860 Rosenheim')) {
+        array_push($postTags, "Heimspiel");
+    } else if (strpos($guest, '1860 Rosenheim')) {
+        array_push($postTags, "Auswärts");
+    }
+
+
+    return $postTags;
+}
+
+function getEventPostContent($score, $team)
+{
+    $guest = $score->scoreGuestTeam;
+    $host = $score->scoreHostTeam;
+    $guestLink = $score->scoreGuestTeamURL;
+    $hostLink = $score->scoreHostTeamURL;
+
+
+    $postContent = "<p><b>" . $team->groupName . ":</b> ";
+
+    if ($hostLink) {
+        $postContent .= "<a href='" . $hostLink . "' target='_blank'>" . $host . "</a> - " . $guest . "</p>";
+    } elseif ($guestLink) {
+        $postContent .= $host . " - <a href='" . $guestLink . "' target='_blank'>" . $guest . "</a></p>";
+    } else {
+        $postContent .=  $host .  " - " . $guest . "</p>";
+    }
+
+
+    return $postContent;
+}
+
+function getMatchId($score)
+{
+    $matchId = $score->teamId . ':' . $score->scoreHostTeam . '-' . $score->scoreGuestTeam;
+    return preg_replace('/\s+/', '', $matchId);
+}
+
+function GetAllMatchEventPosts()
 {
 
     $args =
         array(
             'post_type' => 'tribe_events',
-            'numberposts' => -1,
+            'posts_per_page' => 100000,
             'tax_query' => array(
                 array(
                     'taxonomy' => 'tribe_events_cat',
@@ -166,9 +281,11 @@ function deleteExistingScoreEvents()
 
     $query = new WP_Query($args);
     $posts = $query->posts;
+    $resultPosts = array();
     foreach ($posts as $post) {
-        wp_delete_post($post->ID);
+        $resultPosts[$post->matchId] = $post;
     }
+    return $resultPosts;
 }
 
 function getTeamsDataFromHTML($html)
@@ -500,4 +617,37 @@ function getAllRowsFromTable($table_name)
     $query = "SELECT * FROM `$table_name`";
     $list = $wpdb->get_results($query);
     return $list;
+}
+
+/**
+ * Updates post meta for a post. It also automatically deletes or adds the value to field_name if specified
+ *
+ * @access     protected
+ * @param      integer     The post ID for the post we're updating
+ * @param      string      The field we're updating/adding/deleting
+ * @param      string      [Optional] The value to update/add for field_name. If left blank, data will be deleted.
+ * @return     void
+ */
+function __update_post_meta($post_id, $field_name, $value = '')
+{
+    if (empty($value) or !$value) {
+        delete_post_meta($post_id, $field_name);
+    } elseif (!get_post_meta($post_id, $field_name)) {
+        add_post_meta($post_id, $field_name, $value);
+    } else {
+        update_post_meta($post_id, $field_name, $value);
+    }
+}
+
+function include_customfields_query($posts)
+{
+
+    for ($i = 0; $i < count($posts); $i++) {
+        if ($posts[$i]->post_type == "tribe_events") {
+            $custom_fields = get_post_custom($posts[$i]->ID);
+            $posts[$i]->custom_fields = $custom_fields;
+        }
+    }
+
+    return $posts;
 }

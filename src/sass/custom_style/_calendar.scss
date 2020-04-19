@@ -42,21 +42,21 @@
 .datepicker table tr td span.active.disabled,
 .datepicker table tr td span.active.disabled:hover,
 .datepicker table tr td span.active:hover {
-  background-image: -moz-linear-gradient(to bottom, #f14e55, #d61f26);
-  background-image: -ms-linear-gradient(to bottom, #f14e55, #d61f26);
+  background-image: -moz-linear-gradient(to bottom, #ee232b, #ee232b);
+  background-image: -ms-linear-gradient(to bottom, #ee232b, #ee232b);
   background-image: -webkit-gradient(
     linear,
     0 0,
     0 100%,
-    from(#f14e55),
-    to(#d61f26)
+    from(#ee232b),
+    to(#ee232b)
   );
-  background-image: -webkit-linear-gradient(to bottom, #f14e55, #d61f26);
-  background-image: -o-linear-gradient(to bottom, #f14e55, #d61f26);
-  background-image: linear-gradient(to bottom, #f14e55, #d61f26);
+  background-image: -webkit-linear-gradient(to bottom, #ee232b, #ee232b);
+  background-image: -o-linear-gradient(to bottom, #ee232b, #ee232b);
+  background-image: linear-gradient(to bottom, #ee232b, #ee232b);
   background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f14e55', endColorstr='#d61f26', GradientType=0);
-  border-color: #d61f26 #d61f26 #470a0c;
+  border-color: #ee232b #ee232b #ee232b;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
   color: #fff;
@@ -164,11 +164,236 @@
 }
 
 .tribe-events-single-event-title {
-  margin-bottom: 10px;
+  display: inline;
 }
 
 .tribe-events-back > a {
   color: $secondary;
   margin-bottom: 5px;
   font-weight: bold;
+}
+
+.tribe-events .tribe-events-calendar-list__month-separator:after,
+.tribe-events .tribe-events-calendar-day__time-separator:after,
+.tribe-events-c-day-marker.tribe-events-calendar-month-mobile-events__day-marker:after {
+  background-color: $secondary;
+  content: "";
+  display: block;
+  flex: auto;
+  height: 1px;
+  margin-left: 20px;
+}
+
+.tribe-common .tribe-common-h5,
+.tribe-common .tribe-common-h6 {
+  font-weight: bold;
+}
+
+.tribe-common--breakpoint-medium.tribe-common .tribe-common-h4--min-medium {
+  font-size: 1.3rem;
+}
+
+.single-tribe_events .tribe-events-single-event-title {
+  line-height: 1.25;
+}
+.tribe-common .tribe-events-schedule {
+  margin-bottom: 0.75em;
+  margin-top: 1.2em;
+}
+
+.tribe-events .tribe-events-c-nav {
+  border-top: 1px solid #d5d5d5;
+}
+
+.tribe-events .tribe-events-c-nav__list {
+  list-style: none;
+}
+
+.tribe-events .tribe-events-c-nav__next-label-plural,
+.tribe-events .tribe-events-c-nav__prev-label-plural {
+  white-space: pre;
+}
+
+.tribe-events .tribe-events-c-nav__today:focus,
+.tribe-events .tribe-events-c-nav__today:hover {
+  color: rgba(20, 24, 39, 0.8);
+}
+
+.tribe-events .tribe-events-c-nav__today:active {
+  color: #141827;
+}
+
+.tribe-common--breakpoint-medium.tribe-events .tribe-events-c-nav__next,
+.tribe-common--breakpoint-medium.tribe-events .tribe-events-c-nav__prev {
+  color: #5d5d5d;
+}
+
+.tribe-events .tribe-events-c-nav__next:focus,
+.tribe-events .tribe-events-c-nav__next:hover,
+.tribe-events .tribe-events-c-nav__prev:focus,
+.tribe-events .tribe-events-c-nav__prev:hover {
+  color: rgba(20, 24, 39, 0.8);
+}
+
+.tribe-events .tribe-events-c-nav__next:active,
+.tribe-events .tribe-events-c-nav__prev:active {
+  color: #141827;
+}
+
+.tribe-events .tribe-events-c-nav__next:disabled,
+.tribe-events .tribe-events-c-nav__prev:disabled {
+  background-color: transparent;
+  color: #d5d5d5;
+}
+
+.tribe-events .tribe-events-c-nav__prev:before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.916 17.841L10 19.757l-9.9-9.9L10-.041l1.916 1.916-7.983 7.984z' fill='%23141827'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  height: 12px;
+  margin-right: 8px;
+  width: 7px;
+}
+
+.tribe-common--breakpoint-medium.tribe-events .tribe-events-c-nav__prev:before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.916 17.841L10 19.757l-9.9-9.9L10-.041l1.916 1.916-7.983 7.984z' fill='%235D5D5D'/%3E%3C/svg%3E");
+  height: 14px;
+  margin-right: 15px;
+  width: 9px;
+}
+
+.tribe-events .tribe-events-c-nav__prev:focus:before,
+.tribe-events .tribe-events-c-nav__prev:hover:before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.916 17.841L10 19.757l-9.9-9.9L10-.041l1.916 1.916-7.983 7.984z' fill='%23141827'/%3E%3C/svg%3E");
+  opacity: 0.8;
+}
+
+.tribe-events .tribe-events-c-nav__prev:active:before {
+  opacity: 1;
+}
+
+.tribe-events .tribe-events-c-nav__prev:disabled:before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.916 17.841L10 19.757l-9.9-9.9L10-.041l1.916 1.916-7.983 7.984z' fill='%23D5D5D5'/%3E%3C/svg%3E");
+}
+
+.tribe-events .tribe-events-c-nav__next:after {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M.084 2.159L2 .243l9.9 9.9L2 20.041.084 18.126l7.983-7.984z' fill='%23141827'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  height: 12px;
+  margin-left: 8px;
+  width: 7px;
+}
+
+.tribe-common--breakpoint-medium.tribe-events .tribe-events-c-nav__next:after {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M.084 2.159L2 .243l9.9 9.9L2 20.041.084 18.126l7.983-7.984z' fill='%235D5D5D'/%3E%3C/svg%3E");
+  height: 14px;
+  margin-left: 15px;
+  width: 9px;
+}
+
+.tribe-events .tribe-events-c-nav__next:focus:after,
+.tribe-events .tribe-events-c-nav__next:hover:after {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M.084 2.159L2 .243l9.9 9.9L2 20.041.084 18.126l7.983-7.984z' fill='%23141827'/%3E%3C/svg%3E");
+  opacity: 0.8;
+}
+
+.tribe-events .tribe-events-c-nav__next:active:after {
+  opacity: 1;
+}
+
+.tribe-events .tribe-events-c-nav__next:disabled:after {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='12' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M.084 2.159L2 .243l9.9 9.9L2 20.041.084 18.126l7.983-7.984z' fill='%23D5D5D5'/%3E%3C/svg%3E");
+}
+
+.tribe-common
+  .tribe-events-calendar-list__event-row:not(.tribe-events-calendar-list__month-separator)
+  + .tribe-events-calendar-list__event-row {
+  border-top: 1px solid rgb(175, 175, 175);
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.tribe-events-calendar-list__event-date-tag-weekday:after {
+  display: block;
+  content: "";
+  position: absolute;
+  width: 50px;
+  top: 26px;
+  height: 25px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.02);
+}
+.tribe-events .tribe-events-calendar-list__event-date-tag-datetime {
+  margin: auto;
+  max-width: 50px;
+  background-color: $secondary;
+  height: auto;
+  color: white;
+}
+.tribe-events-calendar-list__event-date-tag-daynum {
+  z-index: 20;
+}
+.tribe-events .tribe-events-c-messages__message--notice:before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 23'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath stroke='%23141827' d='M.5 2.5h20v20H.5z'/%3E%3Cpath stroke='%23ee232b' stroke-linecap='round' d='M7.583 11.583l5.834 5.834m0-5.834l-5.834 5.834'/%3E%3Cpath stroke='%23141827' stroke-linecap='round' d='M4.5.5v4m12-4v4'/%3E%3Cpath stroke='%23141827' stroke-linecap='square' d='M.5 7.5h20'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 22px;
+  display: inline-block;
+  content: "";
+  min-width: 22px;
+  height: 24px;
+  margin-right: 12px;
+}
+
+.tribe-events .tribe-events-c-messages__message {
+  background-color: rgba(175, 175, 175, 0.2);
+  border-radius: 4px;
+}
+.tribe-events .tribe-events-calendar-month__day-cell--mobile {
+  border: 1px solid rgb(175, 175, 175);
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+  border-left-width: 0;
+  border-top-width: 0;
+}
+.tribe-events .tribe-events-calendar-month__mobile-events-icon--event {
+  background-color: $secondary;
+}
+
+@media (max-width: 822px) {
+  .tribe-common .tribe-events-calendar-month__body {
+    border: 1px solid rgb(175, 175, 175);
+    border-bottom-width: 0px;
+    border-right-width: 0px;
+    border-left-width: 1px;
+    border-top-width: 1px;
+  }
+}
+.tribe-common .tribe-events-calendar-month__header-column-title-mobile {
+  text-align: center;
+  display: inline-block;
+  width: 100%;
+}
+
+.event-tag.badge > a {
+  color: white;
+}
+
+.event-tag.badge {
+  color: white;
+  display: inline;
+  padding: $badge-padding-y $badge-padding-x;
+  @include font-size($badge-font-size);
+  font-weight: $badge-font-weight;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: top;
+  @include border-radius($badge-border-radius);
+  @include transition($badge-transition);
+  top: 15px;
+  margin-left: 10px;
+  position: relative;
 }

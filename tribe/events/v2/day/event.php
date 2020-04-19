@@ -32,6 +32,7 @@ if ($event->featured) {
 		<div class="tribe-events-calendar-day__event-details">
 
 			<header class="tribe-events-calendar-day__event-header">
+				<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', ', ', '</span>'); ?>
 				<?php $this->template('day/event/date', ['event' => $event]); ?>
 				<?php $this->template('day/event/title', ['event' => $event]); ?>
 				<?php $this->template('day/event/venue', ['event' => $event]); ?>

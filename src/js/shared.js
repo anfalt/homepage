@@ -1,4 +1,37 @@
 (function ($, WP_1860) {
+  WP_1860.initPostContaier = function (index, el) {
+    var tags = $(el).data("tag");
+    WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (
+      data
+    ) {
+      renderPosts(data, el);
+    });
+  };
+
+  function renderPosts(posts, postContainer) {
+    var postsHtml = posts.map(WP_1860.postsTemplate);
+    $(postContainer).html(postsHtml);
+    $(postContainer).css({ opacity: 1 });
+  }
+
+  WP_1860.postsTemplate = function (post) {
+    var excerpt = post.excerpt ? post.excerpt : post.content;
+    return `<div class="post container fadeInOnScroll">
+                  <div class="row no-gutters">
+                      <div class="postImageContainer col-4">
+                          <a href="${post.link}">
+                              <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>
+                          </a>
+                      </div>
+                      <div class="col-8 postTextContainer">
+                          <div class="px-3">
+                              <h4 >${post.title}</h4>
+                             ${excerpt}
+                          </div>
+                      </div>
+              </div>   
+          </div>`;
+  };
   WP_1860.getData = function (url, successCallback) {
     $.ajax({
       url: url,
@@ -24,6 +57,15 @@
       console.log("Uncaught Error.\n" + jqXHR.responseText);
     }
   };
+
+  WP_1860.tagBadgesTemplates = function (tag) {
+    return `<span class="badge badge-secondary">${tag.name}</span>`;
+  };
+
+  $(document).ready(function () {
+    var postsContainer = $(".postsContainer");
+    postsContainer.each(WP_1860.initPostContaier);
+  });
 
   $(document).ready(function () {
     $(window).on("load", function () {

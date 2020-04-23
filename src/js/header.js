@@ -2,6 +2,7 @@
   $(document).ready(function () {
     registerHoverEventsNavigation();
     registerSocialIconClickHandler();
+    registerClickHandlerMobileNav();
   });
 
   function registerSocialIconClickHandler() {
@@ -16,6 +17,29 @@
     });
     $(".icon-contact").click(function () {
       window.open("/kontakt", "_self");
+    });
+  }
+  function registerClickHandlerMobileNav() {
+    var navButton = $("#nav-btn");
+    var body = $("body");
+    var dropdownNav = $(".nav-item.dropdown");
+
+    navButton.click(function () {
+      if (body.hasClass("nav-is-open")) {
+        body.removeClass("nav-is-open");
+      } else {
+        body.addClass("nav-is-open");
+      }
+    });
+
+    dropdownNav.click(function (event) {
+      var el = $(this);
+      if (el.hasClass("show-submenu")) {
+        $(".show-submenu").removeClass("show-submenu");
+      } else {
+        $(".show-submenu").removeClass("show-submenu");
+        el.addClass("show-submenu");
+      }
     });
   }
 

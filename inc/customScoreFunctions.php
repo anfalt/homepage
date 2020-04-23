@@ -81,14 +81,10 @@ function startEventsSync()
 
     $teamData = getCombinedTeamData();
     $allEvents =   GetAllMatchEventPosts();
-    $i = 0;
+
     foreach ($teamData as $team) {
         foreach ($team->teamScores as $score) {
             addOrUpdateEventPostForScore($score, $team, $allEvents);
-            $i = $i + 1;
-            if ($i > 20) {
-                return;
-            }
         }
     }
 }
@@ -583,10 +579,10 @@ function getCombinedTeamData()
 {
 
 
-    $combinedTeamsData = getAllRowsFromTable(TABLE_NAME_TEAMS);
-    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES);
+    $combinedTeamsData = getAllRowsFromTable(TABLE_NAME_TEAMS, true);
+    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES, false);
     $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamTables, "teamRankings");
-    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES);
+    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES, false);
     $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamScores, "teamScores");
     return $combinedTeamsData;
 }
@@ -611,10 +607,15 @@ function enrichTeamData($teamData, $additionalData, $enrichedPropName)
 
 
 
-function getAllRowsFromTable($table_name)
+function getAllRowsFromTable($table_name, $order)
 {
+
     global $wpdb;
     $query = "SELECT * FROM `$table_name`";
+    if ($order) {
+        $query = "SELECT * FROM `$table_name` ORDER BY `$table_name`.`orderID` ASC";
+    }
+
     $list = $wpdb->get_results($query);
     return $list;
 }

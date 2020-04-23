@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
 
 <article <?php post_class(); ?> id="post-<?php the_ID(); ?>">
 
-	<div class="post container fadeInOnScroll">
+	<div class="post container">
 		<div class="row no-gutters">
 
 			<?php

@@ -7032,39 +7032,79 @@
   }
 })();
 (function ($, WP_1860) {
+  var postCountLastRequest = 0;
+  var page = 0;
+  var loading = false;
+
   WP_1860.initPostContaier = function (index, el) {
+    $(el).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5"].map(WP_1860.postPlaceholderTemplate));
     var tags = $(el).data("tag");
     WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (data) {
       renderPosts(data, el);
     });
   };
 
-  function renderPosts(posts, postContainer) {
+  function renderPosts(data, postContainer) {
+    page = data.page;
+    var posts = data.posts;
+    postCountLastRequest = posts.length;
     var postsHtml = posts.map(WP_1860.postsTemplate);
-    $(postContainer).html(postsHtml);
-    $(postContainer).css({
-      opacity: 1
-    });
+    $(".postPlaceholder").remove();
+    $(postContainer).append(postsHtml);
+    loading = false;
   }
 
   WP_1860.postsTemplate = function (post) {
+    post.tags = post.tags ? post.tags : [];
     var excerpt = post.excerpt ? post.excerpt : post.content;
-    return `<div class="post container fadeInOnScroll">
-                  <div class="row no-gutters">
-                      <div class="postImageContainer col-4">
-                          <a href="${post.link}">
-                              <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>
-                          </a>
+    return `<div class="post wrapper">
+                  <div class="postTags">
+                      ${post.tags.map(WP_1860.tagBadgesTemplates).join("")}
+                  </div>
+                  <a href="${post.link}">
+                  <div class="postContainer row no-gutters">
+                
+                      <div class="postImageContainer col-12  col-lg-4">
+                             ${getPostImageHTML(post)}
+                     
                       </div>
-                      <div class="col-8 postTextContainer">
-                          <div class="px-3">
-                              <h4 >${post.title}</h4>
-                             ${excerpt}
+                      <div class="col-12 col-lg-8 postTextContainer">
+                          <div class="postDetails px-3">
+                              <h4>${post.title}</h4>
+                             <span>${excerpt}</span>
+                             <div class="further-btn-wrapper">
+                              <button class="btn btn-secondary">
+                                <i class="fa fa-angle-double-right"></i>
+                                </button>
+                                </div>
                           </div>
-                      </div>
-              </div>   
+                         
+                     </div>
+              </div>  
+              </a> 
           </div>`;
   };
+
+  function getPostImageHTML(post) {
+    if (post.type == "tribe_events" && post.custom_fields && post.custom_fields["_EventStartDate"]) {
+      var eventDate = new Date(post.custom_fields["_EventStartDate"][0]);
+      return `<div class="eventDateTimeContainer">
+          <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+        month: "short"
+      })}</span>
+        <span class="eventDateDay">${eventDate.toLocaleString("default", {
+        day: "2-digit"
+      })}</span>
+      </div>
+      <div class="eventDateTime">${eventDate.toLocaleString("default", {
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      })}</div>`;
+    } else {
+      return ` <img src="${post.imageUrl}" alt="${post.title}" class="img-fluid"/>`;
+    }
+  }
 
   WP_1860.getData = function (url, successCallback) {
     $.ajax({
@@ -7091,33 +7131,69 @@
   };
 
   WP_1860.tagBadgesTemplates = function (tag) {
-    return `<span class="badge badge-secondary">${tag.name}</span>`;
+    var url = "/tag/" + tag.slug;
+
+    if (tag.slug.indexOf("-tag")) {
+      url = url.replace("tag/", "");
+      url = url.replace("-tag", "");
+    }
+
+    return `<a href="${url}"> <span class="badge badge-secondary">${tag.name}</span></a>`;
   };
+
+  WP_1860.postPlaceholderTemplate = function () {
+    return `<div class="postPlaceholder" >
+                  <div class="postTags loading">
+                  </div>
+                  <div class="postContainer row no-gutters">
+                      <div class="postImageContainer loading col-12 col-lg-4">
+                      </div>
+                      <div class="col-12 col-lg-8  postTextContainer">
+                          <div class="postDetails px-3">
+                              <div class="headingPlaceholder loading"></div>
+                             <div class="postExcerptContainer line1 loading"></div>
+                             <div class="postExcerptContainer line2 loading"></div>
+                             <div class="postExcerptContainer line3 loading"></div>
+                          </div>
+                     </div>
+              </div>  
+          </div>`;
+  };
+
+  function registerInfiniteScroll(postsContainer) {
+    $(window).on("scroll", function () {
+      var scrollHeight = $(document).height();
+      var scrollPos = $(window).height() + $(window).scrollTop();
+      var scrollHeight = $(document).height(); //scroll position
+
+      var scrollPos = $(window).height() + $(window).scrollTop(); // fire if the scroll position is 300 pixels above the bottom of the page
+
+      if ((scrollHeight - 300 >= scrollPos) / scrollHeight == 0) {
+        var infiniteLoading = $(postsContainer).data("infinite-loading");
+
+        if (postCountLastRequest == 10 && !loading && infiniteLoading) {
+          loadMorePosts(postsContainer);
+        }
+      }
+    });
+  }
+
+  function loadMorePosts(postsContainer) {
+    $(postsContainer).append(["placeholder1", "placeholder2"].map(WP_1860.postPlaceholderTemplate));
+    loading = true;
+    var tags = $(postsContainer).data("tag");
+    page = WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags + "&page= " + (page + 1), function (data) {
+      renderPosts(data, postsContainer);
+    });
+  }
 
   $(document).ready(function () {
     var postsContainer = $(".postsContainer");
     postsContainer.each(WP_1860.initPostContaier);
-  });
-  $(document).ready(function () {
-    $(window).on("load", function () {
-      $(window).scroll(function () {
-        var windowBottom = $(this).scrollTop() + $(this).innerHeight();
-        $(".fadeInOnScroll").each(function () {
-          /* Check the location of each desired element */
-          var objectBottom = $(this).offset().top + $(this).outerHeight() / 2;
-          /* If the element is completely within bounds of the window, fade it in */
 
-          if (objectBottom < windowBottom) {
-            //object comes into view (scrolling down)
-            if ($(this).css("opacity") == 0) {
-              $(this).css({
-                opacity: 1
-              });
-            }
-          }
-        });
-      }).scroll(); //invoke scroll-handler on page-load
-    });
+    if (postsContainer[0]) {
+      registerInfiniteScroll(postsContainer[0]);
+    }
   });
 })(jQuery, window["WP_1860"] ? window["WP_1860"] : window["WP_1860"] = {});
 (function ($) {
@@ -7160,6 +7236,7 @@
   $(document).ready(function () {
     registerHoverEventsNavigation();
     registerSocialIconClickHandler();
+    registerClickHandlerMobileNav();
   });
 
   function registerSocialIconClickHandler() {
@@ -7174,6 +7251,29 @@
     });
     $(".icon-contact").click(function () {
       window.open("/kontakt", "_self");
+    });
+  }
+
+  function registerClickHandlerMobileNav() {
+    var navButton = $("#nav-btn");
+    var body = $("body");
+    var dropdownNav = $(".nav-item.dropdown");
+    navButton.click(function () {
+      if (body.hasClass("nav-is-open")) {
+        body.removeClass("nav-is-open");
+      } else {
+        body.addClass("nav-is-open");
+      }
+    });
+    dropdownNav.click(function (event) {
+      var el = $(this);
+
+      if (el.hasClass("show-submenu")) {
+        $(".show-submenu").removeClass("show-submenu");
+      } else {
+        $(".show-submenu").removeClass("show-submenu");
+        el.addClass("show-submenu");
+      }
     });
   }
 
@@ -7220,9 +7320,11 @@
 })(jQuery);
 (function ($) {
   $(document).ready(function () {
+    loadHeroImages();
     var sponsorContainer = $("#homePageSponsors")[0];
     var postsContainer = $("#homePagePosts")[0];
     var upcomingEvents = $("#upcomingEvents")[0];
+    var upcomingFeaturedEvents = $("#upcomingFeaturedEvents")[0];
 
     if (postsContainer) {
       initHomePagePosts();
@@ -7236,48 +7338,79 @@
       initHomePageSponsors();
     }
 
+    if (upcomingFeaturedEvents) {
+      initUpcomingFeaturedEvents();
+    }
+
     function initUpcomingEvents() {
+      $(upcomingEvents).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5", "placeholder6", "placeholder7", "placeholder8"].map(upcomingEventPlaceholderTemplate));
       var url = getUpcomingEventRestUrl();
       WP_1860.getData(url, renderUpcomingEvents);
     }
 
+    function initUpcomingFeaturedEvents() {
+      var url = getUpcomingFeaturedEventRestUrl();
+      WP_1860.getData(url, renderUpcomingFeaturedEvents);
+    }
+
     function initHomePageSponsors() {
+      $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4"].map(sponsorPlaceHolderTemplate));
       WP_1860.getData("/wp-json/custom-api/v1/images/homePageSponsors", renderHomePageSponsors);
     }
 
     function initHomePagePosts() {
+      $(postsContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4"].map(WP_1860.postPlaceholderTemplate));
       WP_1860.getData("/wp-json/custom-api/v1/allPosts?categories=homepage", renderLoadedHomePagePosts);
     }
 
     function renderLoadedHomePagePosts(data) {
-      var posts = data;
+      var posts = data.posts;
       var postsHtml = posts.map(WP_1860.postsTemplate);
       $(postsContainer).html(postsHtml);
-      $(postsContainer).css({
-        opacity: 1
-      });
     }
 
     function renderHomePageSponsors(data) {
-      var images = data.posts;
+      var images = data.sort((a, b) => a.menu_order - b.menu_order);
       var sponsorsHTML = images.map(homePageSponsorsTemplate);
       $(sponsorContainer).html(sponsorsHTML);
-      $(sponsorContainer).css({
-        opacity: 1
-      });
+    }
+
+    function renderUpcomingFeaturedEvents(data) {
+      var upcomingFeaturedEventsHTML = data.events.map(upcomingEventsTemplate);
+      $(upcomingFeaturedEvents).html(upcomingFeaturedEventsHTML);
     }
 
     function renderUpcomingEvents(data) {
       var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
       $(upcomingEvents).html(upcomingEventsHTML);
-      $(upcomingEvents).css({
-        opacity: 1
-      });
+    }
+
+    function sponsorPlaceHolderTemplate() {
+      return `<div class="sponsorPlaceholder loading">
+                   
+           </div>`;
+    }
+
+    function upcomingEventPlaceholderTemplate() {
+      return `<div class="upcomingEvent eventPlaceholder">
+                    <div class="eventDateTimeContainer loading">
+                     <div class="eventDateMonth "></div>
+                     <div class="eventDateDay"></div>
+                   </div>
+                   <div class="eventDetails">
+                     <div class="eventHeader">
+                       <div class="eventDateTime loading"></div>
+                       <div class="eventTags loading"></div>
+                     </div>
+                  <div class="eventTitle loading"></div>
+                </div>
+           </div>`;
     }
 
     function upcomingEventsTemplate(event) {
       var eventDate = new Date(event.start_date);
       return `<div class="upcomingEvent">
+      <a href="${event.url}">
       <div class="eventDateTimeContainer">
       <span class="eventDateMonth">${eventDate.toLocaleString("default", {
         month: "short"
@@ -7287,6 +7420,7 @@
       })}</span>
     
       </div>
+      </a>
       <div class="eventDetails">
            <div class="eventHeader">
            <div class="eventDateTime">${eventDate.toLocaleString("default", {
@@ -7295,7 +7429,7 @@
         minute: "2-digit"
       })}</div>
              <div class="eventTags">
-              ${event.tags.map(WP_1860.tagBadgesTemplates)}
+              ${event.tags.map(WP_1860.tagBadgesTemplates).join("")}
             </div>
            
           </div>
@@ -7307,10 +7441,12 @@
     }
 
     function homePageSponsorsTemplate(sponsor) {
-      return `<div class="sponsor fadeInOnScroll">
-                <a href="${sponsor.post_excerpt}" target="_blank">
-                    <img src="${sponsor.guid}" alt="${sponsor.post_title}"/>
+      return `<div class="sponsor">
+             
+                <a href="${sponsor.link}" target="_blank">
+                    <img src="${sponsor.imageURL}" alt="${sponsor.post_title}"/>
                 </a>
+             
             </div>`;
     }
 
@@ -7322,11 +7458,142 @@
 
     function getUpcomingEventRestUrl() {
       var baseUrl = "/wp-json/tribe/events/v1/events/";
-      var dateInNextTwoWeeks = getCurrentDateWithWeekOffset(2);
       var filterStartDate = new Date().getFullYear() + "-" + ("0" + (new Date().getMonth() + 1)).slice(-2) + "-" + ("0" + new Date().getDate()).slice(-2);
-      return baseUrl + `?start_date=${filterStartDate}&per_page=100`;
+      return baseUrl + `?start_date=${filterStartDate}&per_page=15&featured=false`;
+    }
+
+    function getUpcomingFeaturedEventRestUrl() {
+      var filterStartDate = new Date().getFullYear() + "-" + ("0" + (new Date().getMonth() + 1)).slice(-2) + "-" + ("0" + new Date().getDate()).slice(-2);
+      var baseUrl = "/wp-json/tribe/events/v1/events/";
+      var dateInNextTwoWeeks = getCurrentDateWithWeekOffset(4);
+      var filterEndDate = dateInNextTwoWeeks.getFullYear() + "-" + ("0" + (dateInNextTwoWeeks.getMonth() + 1)).slice(-2) + "-" + ("0" + dateInNextTwoWeeks.getDate()).slice(-2);
+      return baseUrl + `?start_date=${filterStartDate}&end_date=${filterEndDate}&per_page=15&featured=true`;
+    }
+
+    function loadHeroImages() {
+      var win, doc, header, enhancedClass; // Quit early if older browser (e.g. IE 8).
+
+      if (!("addEventListener" in window)) {
+        return;
+      }
+
+      win = window;
+      doc = win.document;
+      header = doc.querySelectorAll(".carousel-item");
+      enhancedClass = "enhanced";
+
+      var bigSrcs = function () {
+        // Find all of the CssRule objects inside the inline stylesheet
+        var styles = doc.querySelector("#homeHeroImageLoading").sheet.cssRules; // Fetch the background-image declaration...
+
+        var bgDecls = function () {
+          var bgStyles = [],
+              i,
+              l = styles.length;
+
+          for (i = 0; i < l; i++) {
+            // ...checking if the rule is the one targeting the
+            // enhanced header.
+            if (styles[i].selectorText && styles[i].selectorText.indexOf("." + enhancedClass) > -1) {
+              // If so, set bgDecl to the entire background-image
+              // value of that rule
+              bgStyles.push(styles[i].style.backgroundImage);
+            }
+          } // ...and return that text.
+
+
+          return bgStyles;
+        }(); // Finally, return a match for the URL inside the background-image
+        // by using a fancy regex I Googled up, as long as the bgDecl
+        // variable is assigned at all.
+
+
+        return bgDecls.map(function (el) {
+          return el.match(/(?:\(['|"]?)(.*?)(?:['|"]?\))/)[1];
+        });
+      }(); // Assign an onLoad handler to the dummy image *before* assigning the src
+      // Finally, trigger the whole preloading chain by giving the dummy
+      // image its source.
+
+
+      bigSrcs.forEach(function (src, ix) {
+        var img = new Image();
+
+        if (src) {
+          img.src = src;
+        }
+
+        img.onload = function () {
+          header[ix].className += " " + enhancedClass;
+        };
+      });
     }
   });
+})(jQuery);
+(function ($) {
+  $(document).ready(function () {
+    var sponsorContainer = $("#sponsorOverview")[0];
+    var premiumSponsorContainer = $("#premiumSponsorOverview")[0];
+
+    if (sponsorContainer) {
+      initSponors(sponsorContainer);
+    }
+
+    if (premiumSponsorContainer) {
+      initPremiumSponors(premiumSponsorContainer);
+    }
+  });
+
+  function initPremiumSponors(sponsorContainer) {
+    $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5", "placeholder6", "placeholder7", "placeholder8"].map(sponsorOverviewPlaceHolderTemplate));
+    WP_1860.getData("/wp-json/custom-api/v1/images/premiumSponsor", function (data) {
+      renderSponsors(data, sponsorContainer);
+    });
+  }
+
+  function initSponors(sponsorContainer) {
+    $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5", "placeholder6", "placeholder7", "placeholder8"].map(sponsorOverviewPlaceHolderTemplate));
+    WP_1860.getData("/wp-json/custom-api/v1/images/defaultSponsor", function (data) {
+      renderSponsors(data, sponsorContainer);
+    });
+  }
+
+  function renderSponsors(data, sponsorContainer) {
+    var images = data.sort((a, b) => a.menu_order - b.menu_order);
+    var sponsorsHTML = images.map(sponsorOverviewTemplate);
+    $(sponsorContainer).html(sponsorsHTML);
+  }
+
+  function sponsorOverviewTemplate(sponsor) {
+    return `<div class="cardWrapper">
+  <a href="${sponsor.link}" target="_blank">
+    <div class="card" style="width: 16rem;">
+      <div class="card-header">
+         <span> ${sponsor.title}</span>  
+          <button class="btn btn-secondary">
+          <i class="fa fa-angle-double-right"></i>
+          </button>
+      </div>
+      <div class="card-body">
+        <img src="${sponsor.imageURL}" alt="${sponsor.post_title}"/>
+        </div>
+  </div>
+  </a>
+  </div>`;
+  }
+
+  function sponsorOverviewPlaceHolderTemplate() {
+    return `<div class="cardWrapper cardPlaceholder">
+    <div class="card" style="width: 16rem;">
+      <div class="card-header loading">
+      </div>
+      <div class="card-body">
+        <div class="sponsorPlaceholder loading">          
+        </div>
+        </div>
+  </div>
+  </div>`;
+  }
 })(jQuery);
 (function ($) {
   $(document).ready(function () {
@@ -7337,7 +7604,28 @@
     }
 
     function initTeams() {
+      $(teamsContainer).html(["1", "2", "3", "4", "5", "6", "7", "8"].map(getTeamsPlaceHolder));
       WP_1860.getData("/wp-json/custom-api/v1/teams", handleLoadedTeamData);
+    }
+
+    function getTeamsPlaceHolder() {
+      return `<div class="cardWrapper cardPlaceholder">
+      <div class="card" style="width: 16rem;">
+        <div class="card-header loading">
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item loading"></li>
+            <li class="list-group-item loading"></li>
+            <li class="list-group-item loading"> </li>
+          </ul>
+          </div>
+          <div class="card-footer">
+          <button type="button" class="btn btn-secondary loading"></button>
+          <button type="button" class="btn btn-secondary loading"></button>
+    </div>
+    </div>
+    </div>`;
     }
 
     function handleLoadedTeamData(data) {
@@ -7345,63 +7633,80 @@
     }
 
     function displayTeamContainers(teams) {
-      var teamsHTML = teams.map(function (el) {
-        return collapseTeamTemplate(el);
-      });
+      var teamsHTML = teams.map(teamTemplate);
       $(teamsContainer).html(teamsHTML);
-      $(teamsContainer).css({
-        opacity: 1
-      }); //$(".teamMatches").hide();
-      // $(".showTeamMatches").click(function (event) {
-      //   var teamId = $(event.target).data("teamid");
-      //   $("#teamTable-" + teamId).hide();
-      //   $("#teamMatches-" + teamId).show();
-      // });
-      // $(".showTeamRanking").click(function (event) {
-      //   var teamId = $(event.target).data("teamid");
-      //   $("#teamMatches-" + teamId).hide();
-      //   $("#teamTable-" + teamId).show();
-      // });
     }
 
-    function collapseTeamTemplate(team) {
-      return `
-      <a class="btn-link" data-toggle="collapse" href="#collapse-${team.teamId}"  aria-controls="collapse-${team.teamId}">
-      <h3>${team.teamName}</h3>
-      </a>
-      <div class="collapse" id="collapse-${team.teamId}"> 
-      <ul class="nav nav-pills" role="tablist">
-       <li class="nav-item">
-         <a href='#teamTable-${team.teamId}' class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamTable-${team.teamId}" id="teamTable-${team.teamId}-tab">Tabelle</a>
-        </li>
-        <li class="nav-item">
-        <a href="#teamMatches-${team.teamId}" class="nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamMatches-${team.teamId}" id="teamMatches-${team.teamId}-tab">Begegnungen</a>
-        </li>
-      </ul>  
-      <div class="tab-content">
-        ${teamTableTemplate(team)}
-        ${teamScoresTemplate(team)}
-      </div>
-       </div>`;
+    function teamTemplate(team) {
+      var teamRanking = team.teamRankings.find(el => el.teamName.indexOf("1860 Rosenheim") > -1);
+
+      if (!teamRanking) {
+        teamRanking = {
+          ranking: 0,
+          points: "0:0"
+        };
+      }
+
+      return `<div class="cardWrapper">
+                <div class="card" style="width: 16rem;">
+                  <div class="card-header">
+                      ${team.teamName}
+                  </div>
+                  <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>Liga:</b> <a href="${team.groupUrl}" target="_blank">${team.groupName}</a></li>
+                      <li class="list-group-item"><b>Tabellen Postition:</b> ${teamRanking.ranking}</li>
+                      <li class="list-group-item"><b>Punkte:</b> ${teamRanking.points} </li>
+                    </ul>
+                    </div>
+                    <div class="card-footer">
+                    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target='#teamTable-${team.teamId}'>
+                      Tabelle
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#teamMatches-${team.teamId}">
+                    Spielplan
+                  </button> 
+              </div>
+              </div>
+             <div class="modals">
+             ${teamTableTemplate(team)}
+             ${teamScoresTemplate(team)}
+             </div>
+              </div>`;
     }
 
     function teamTableTemplate(team) {
-      return `<table class="table tab-pane fade show active teamTable" role="tabpanel" aria-labelledby="teamTable-${team.teamId}-tab" id="teamTable-${team.teamId}" >
-        <thead>
-          <tr>
-            <th scope="col">Rang</th>
-            <th scope="col">Mannschaft</th>
-            <th scope="col">Beg.</th>
-            <th scope="col">Punkte</th>
-            <th scope="col">Matchbilanz</th>
-            <th scope="col">Sätze</th>
-            <th scope="col">Spiele</th>
-          </tr>
-        </thead>
-        <tbody>
-         ${team.teamRankings.map(teamRankingRow).join("")}
-        </tbody>
-      </table>`;
+      return `
+      <div class="modal " id="teamTable-${team.teamId}">
+          <div class="modal-dialog teamDetailModal" role="document">
+              <div class="modal-content">
+                     <div class="modal-header">
+                     <h5 class="modal-title teamDetailModalTitle">${team.teamName} - Tabelle</h5>
+                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+               <div class="modal-body">
+                 <table class="table teamTable">
+                   <thead>
+                     <tr>
+                       <th scope="col">Rang</th>
+                       <th scope="col">Mannschaft</th>
+                       <th scope="col">Beg.</th>
+                       <th scope="col">Punkte</th>
+                       <th scope="col">Matchbilanz</th>
+                       <th scope="col">Sätze</th>
+                       <th scope="col">Spiele</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                    ${team.teamRankings.map(teamRankingRow).join("")}
+                   </tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
+      </div>`;
     }
 
     function teamRankingRow(teamRank) {
@@ -7419,20 +7724,34 @@
     }
 
     function teamScoresTemplate(team) {
-      return `<table class="table tab-pane fade teamMatches" role="tabpanel" id="teamMatches-${team.teamId}" aria-labelledby="teamTable-${team.teamId}-tab">
-      <thead>
-        <tr>
-          <th scope="col">Datum</th>
-          <th scope="col">Heimannschaft</th>
-          <th scope="col">Gastmannschaft</th>
-          <th scope="col">Matchpunkte</th>
-          <th scope="col">Spielbericht</th>
-        </tr>
-      </thead>
-      <tbody>
-       ${team.teamScores.map(teamScoreRow).join("")}
-      </tbody>
-    </table>`;
+      return ` <div class="modal " id="teamMatches-${team.teamId}">
+                 <div class="modal-dialog teamDetailModal" role="document">
+                   <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title teamDetailModalTitle">${team.teamName} - Spielplan</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">&times;</span>
+                         </button>
+                       </div>
+                    <div class="modal-body">
+                     <table class="table teamMatches">
+                     <thead>
+                       <tr>
+                         <th scope="col">Datum</th>
+                         <th scope="col">Heimannschaft</th>
+                         <th scope="col">Gastmannschaft</th>
+                         <th scope="col">Matchpunkte</th>
+                         <th scope="col">Spielbericht</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                      ${team.teamScores.map(teamScoreRow).join("")}
+                     </tbody>
+                    </table>
+                  </div>
+               </div>
+          </div>
+    </div>`;
     }
 
     function teamScoreRow(teamScore) {

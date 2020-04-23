@@ -1,4 +1,5 @@
 <?php
+
 /**
  * View: Month View - Multiday Event
  *
@@ -28,24 +29,25 @@ use Tribe__Date_Utils as Dates;
  * To keep the calendar accessible, in the context of a week, we'll print the event only on either its first day
  * or the first day of the week.
  */
-$should_display = in_array( $day_date, $event->displays_on, true )
-                  || $is_start_of_week;
 
-$classes = tribe_get_post_class( [ 'tribe-events-calendar-month__multiday-event' ], $event->ID );
+$should_display = in_array($day_date, $event->displays_on, true)
+	|| $is_start_of_week;
+
+$classes = tribe_get_post_class(['tribe-events-calendar-month__multiday-event'], $event->ID);
 
 // @todo @fe move class configuration to template tag
 
-if ( $event->featured ) {
+if ($event->featured) {
 	$classes[] = 'tribe-events-calendar-month__multiday-event--featured';
 }
 
 // If the event started on a previous month.
-$started_previous_month = $event->dates->start_display->format( 'Y-m-d' ) < $grid_start_date;
-$is_first_appearance    = ( $event->dates->start_display->format( 'Y-m-d' ) === $day_date )
-                          || ( $started_previous_month && $grid_start_date === $day_date );
+$started_previous_month = $event->dates->start_display->format('Y-m-d') < $grid_start_date;
+$is_first_appearance    = ($event->dates->start_display->format('Y-m-d') === $day_date)
+	|| ($started_previous_month && $grid_start_date === $day_date);
 
 // If it starts today and this week, let's add the left border and set the width.
-if ( $should_display ) {
+if ($should_display) {
 
 	/*
 	 * The "duration" here is how many days the event will take this week, not in total.
@@ -55,42 +57,29 @@ if ( $should_display ) {
 	$classes[] = 'tribe-events-calendar-month__multiday-event--display';
 
 	// If it ends this week, let's add the start class (left border).
-	if ( $event->starts_this_week ) {
+	if ($event->starts_this_week) {
 		$classes[] = 'tribe-events-calendar-month__multiday-event--start';
 	}
 
 	// If it ends this week, let's add the end class (right border).
-	if ( $event->ends_this_week ) {
+	if ($event->ends_this_week) {
 		$classes[] = 'tribe-events-calendar-month__multiday-event--end';
 	}
 
-	if ( $event->dates->end->format( 'Y-m-d' ) < $today_date ) {
+	if ($event->dates->end->format('Y-m-d') < $today_date) {
 		$classes[] = 'tribe-events-calendar-month__multiday-event--past';
 	}
 }
 ?>
 <div class="tribe-events-calendar-month__multiday-event-wrapper">
-	<article <?php tribe_classes( $classes ); ?> data-event-id="<?php echo esc_attr( $event->ID ); ?>">
+	<article <?php tribe_classes($classes); ?> data-event-id="<?php echo esc_attr($event->ID); ?>">
 		<div class="tribe-events-calendar-month__multiday-event-hidden">
-			<time
-				datetime="<?php echo esc_attr( $event->dates->start->format( Dates::DBDATEFORMAT ) ); ?>"
-				class="tribe-common-a11y-visual-hide"
-			>
-				<?php echo esc_attr( $event->dates->start->format( Dates::DBDATEFORMAT ) ); ?>
+			<time datetime="<?php echo esc_attr($event->dates->start->format(Dates::DBDATEFORMAT)); ?>" class="tribe-common-a11y-visual-hide">
+				<?php echo esc_attr($event->dates->start->format(Dates::DBDATEFORMAT)); ?>
 			</time>
-			<a
-				href="<?php echo esc_url( $event->permalink ); ?>"
-				class="tribe-events-calendar-month__multiday-event-hidden-link"
-				data-js="tribe-events-tooltip"
-				data-tooltip-content="#tribe-events-tooltip-content-<?php echo esc_attr( $event->ID ); ?>"
-				aria-describedby="tribe-events-tooltip-content-<?php echo esc_attr( $event->ID ); ?>"
-			>
-				<?php if ( $event->featured ) : ?>
-					<em
-						class="tribe-events-calendar-month__multiday-event-hidden-featured-icon tribe-common-svgicon tribe-common-svgicon--featured"
-						aria-label="<?php esc_attr_e( 'Featured', 'the-events-calendar' ); ?>"
-						title="<?php esc_attr_e( 'Featured', 'the-events-calendar' ); ?>"
-					></em>
+			<a href="<?php echo esc_url($event->permalink); ?>" class="tribe-events-calendar-month__multiday-event-hidden-link" data-js="tribe-events-tooltip" data-tooltip-content="#tribe-events-tooltip-content-<?php echo esc_attr($event->ID); ?>" aria-describedby="tribe-events-tooltip-content-<?php echo esc_attr($event->ID); ?>">
+				<?php if ($event->featured) : ?>
+
 				<?php endif; ?>
 				<h3 class="tribe-events-calendar-month__multiday-event-hidden-title tribe-common-h8">
 					<?php
@@ -100,15 +89,11 @@ if ( $should_display ) {
 				</h3>
 			</a>
 		</div>
-		<?php if ( $should_display ) : ?>
+		<?php if ($should_display) : ?>
 			<div class="tribe-events-calendar-month__multiday-event-bar">
 				<div class="tribe-events-calendar-month__multiday-event-bar-inner">
-					<?php if ( $event->featured ) : ?>
-						<em
-							class="tribe-events-calendar-month__multiday-event-bar-featured-icon tribe-common-svgicon tribe-common-svgicon--featured"
-							aria-label="<?php esc_attr_e( 'Featured', 'the-events-calendar' ); ?>"
-							title="<?php esc_attr_e( 'Featured', 'the-events-calendar' ); ?>"
-						></em>
+					<?php if ($event->featured) : ?>
+
 					<?php endif; ?>
 					<h3 class="tribe-events-calendar-month__multiday-event-bar-title tribe-common-h8">
 						<?php
@@ -118,8 +103,8 @@ if ( $should_display ) {
 					</h3>
 				</div>
 			</div>
-			<?php if ( $is_first_appearance ) : ?>
-				<?php $this->template( 'month/calendar-body/day/calendar-events/calendar-event/tooltip', [ 'event' => $event ] ); ?>
+			<?php if ($is_first_appearance) : ?>
+				<?php $this->template('month/calendar-body/day/calendar-events/calendar-event/tooltip', ['event' => $event]); ?>
 			<?php endif; ?>
 		<?php endif; ?>
 	</article>

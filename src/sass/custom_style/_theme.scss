@@ -3,20 +3,6 @@
   font-weight: 300;
   line-height: 1;
 }
-.fadeInOnScroll {
-  opacity: 0;
-  transition: opacity 0.35s ease-in-out;
-  -moz-transition: opacity 0.35s ease-in-out;
-  -webkit-transition: opacity 0.35s ease-in-out;
-}
-
-#teamsContainer {
-  transition: opacity 0.1s ease-in;
-  -webkit-transition: opacity 0.1s ease-in;
-  -moz-transition: opacity 0.1s ease-in;
-  -o-transition: opacity 0.1s ease-in;
-  opacity: 0;
-}
 
 .was-validated .form-control:valid:focus {
   box-shadow: none !important;
@@ -28,20 +14,25 @@
 }
 input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 50px white inset; /* Change the color to your own background color */
+  box-shadow: 0 0 0 50px white inset; /* Change the color to your own background color */
 }
 
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 50px white inset; /*your box-shadow*/
+  box-shadow: 0 0 0 50px white inset; /* Change the color to your own background color */
 }
 
-.post.container {
+.post.wrapper:not(:last-child) {
   padding: 15px;
   border-bottom: 1px solid $secondary;
-  cursor: pointer;
 }
 
-.postTextContainer {
-  padding: 10px;
+.post.wrapper + .postPlaceholder {
+  margin-top: 10px;
+}
+
+.site-main {
+  width: 100%;
 }
 
 .postImageContainer a {
@@ -54,19 +45,313 @@ input:-webkit-autofill:focus {
 }
 
 .postImageContainer {
-  max-width: 90%;
+  max-width: 250px;
   max-height: 90%;
   overflow: hidden;
-  margin-bottom: auto;
-  margin-top: auto;
+  text-align: center;
+  margin: 15px;
 }
 
 .postImageContainer img {
   transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1),
     filter 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s;
 }
+.postTags {
+  text-align: right;
+  margin-right: 5px;
+}
 
-.post.container:hover img {
+.postContainer:hover img {
   transform: scale(1.05);
   filter: grayscale(100%);
+}
+
+.postContainer {
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.post.wrapper a {
+  text-decoration: none;
+}
+.postImageContainer > .eventDateTimeContainer {
+  margin: auto;
+}
+.postDetails .btn {
+  margin-top: 15px;
+}
+.postImageContainer .eventDateTime {
+  margin-top: 10px;
+}
+.postTags > a,
+.eventTags > a {
+  margin-left: 5px;
+}
+.postPlaceholder {
+  width: 100%;
+  height: 150px;
+  cursor: default;
+}
+.postPlaceholder .loading,
+.eventPlaceholder .loading,
+.sponsorPlaceholder.loading,
+.cardPlaceholder .loading {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    display: block;
+    background-color: rgba(120, 120, 120, 0.2);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(0);
+    animation: 1.5s loading-placeholder ease-in-out infinite;
+  }
+}
+
+@keyframes loading-placeholder {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.postPlaceholder .postContainer {
+  cursor: default;
+}
+
+.postPlaceholder .postTags,
+.eventPlaceholder .eventTags {
+  height: 1rem;
+  width: 15%;
+  background-color: rgba(238, 35, 43, 0.3);
+  margin-left: auto;
+}
+
+.postPlaceholder .postImageContainer,
+.sponsorPlaceholder {
+  background-color: #dfdfdf;
+  height: 90px;
+}
+.postPlaceholder .headingPlaceholder,
+.eventPlaceholder .eventDateTime {
+  background-color: #dfdfdf;
+  width: 70%;
+  height: 1rem;
+}
+.postPlaceholder .postExcerptContainer.line1 {
+  margin-top: 20px;
+}
+.postPlaceholder .postExcerptContainer,
+.eventPlaceholder .eventTitle {
+  height: 1rem;
+  background: #efefef;
+  margin-top: 5px;
+}
+.eventPlaceholder .eventDateTimeContainer {
+  background-color: rgba(238, 35, 43, 0.3);
+}
+
+.eventPlaceholder .eventTags {
+  width: 25%;
+}
+.eventPlaceholder .eventDateTime {
+  width: 30%;
+}
+
+.sponsorPlaceholder {
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  max-width: 250px;
+}
+
+#homePageSponsors .sponsorPlaceholder {
+  padding: 0;
+  margin: 10px;
+}
+
+#teamsContainer,
+#sponsorOverview,
+#premiumSponsorOverview {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.cardWrapper {
+  margin: 5px;
+}
+.cardWrapper .card {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  height: 100%;
+}
+
+.cardWrapper a {
+  text-decoration: none;
+}
+
+#teamsContainer .card-header,
+#premiumSponsorOverview .card-header {
+  background: black;
+  color: white;
+}
+
+#sponsorOverview .card-header,
+#premiumSponsorOverview .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 10px;
+}
+#sponsorOverview .card-body,
+#premiumSponsorOverview .card-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#sponsorOverview .card {
+  width: 13rem !important;
+}
+
+#teamsContainer .cardWrapper .btn {
+  margin: auto;
+  margin-bottom: 10px;
+  width: 90%;
+}
+.list-group {
+  margin-bottom: 5px;
+}
+
+.cardWrapper img {
+  transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.cardWrapper:hover img {
+  transform: scale(1.05);
+}
+
+.cardPlaceholder .card-header {
+  height: 3rem;
+  background-color: #afafaf;
+}
+.cardPlaceholder .list-group-item {
+  height: 2rem;
+  margin-bottom: 10px;
+  border-top: none;
+}
+
+.cardPlaceholder .btn {
+  height: 2.4rem;
+  background-color: rgba(238, 35, 43, 0.3);
+  border: none;
+}
+.further-btn-wrapper {
+  text-align: right;
+}
+.further-btn-wrapper .btn {
+  margin-right: 15px;
+}
+
+.teamTable,
+.teamMatches {
+  width: 100%;
+}
+.modal-body {
+  overflow-x: auto;
+}
+.modal-dialog.teamDetailModal {
+  max-width: 90%;
+}
+.teamDetailModal .table th {
+  background-color: $secondary;
+  color: white;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.postsContainer.posts-small-width .postTextContainer,
+.postsContainer.posts-small-width .postImageContainer {
+  flex: 0 0 100%;
+}
+.postsContainer.posts-small-width .postImageContainer {
+  margin: 15px;
+}
+
+.postsContainer.posts-small-width .postPlaceholder {
+  height: 250px;
+}
+
+.site-footer .footer-links {
+  display: flex;
+  flex-direction: row;
+}
+
+.site-footer {
+  padding: 5px;
+  width: 100%;
+  margin-top: 30px;
+}
+.site-footer .footer-links,
+.site-footer .footer-brand {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.footer-links a,
+.footer-brand a {
+  margin: 10px;
+}
+
+.footer-brand > a {
+  text-decoration: none;
+  color: #999;
+}
+.wrapper {
+  padding: 10px 0;
+}
+.site-info.row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+@media (max-width: 992px) {
+  .postPlaceholder {
+    height: 250px;
+  }
+}
+@media (min-width: 992px) {
+  .postImageContainer {
+    padding: 0;
+    margin: 0;
+  }
+}
+@media (max-width: 768px) {
+  .site-footer .footer-links {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .footer-links a,
+  .footer-brand a {
+    margin: 5px;
+  }
+
+  .site-footer .footer-brand {
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 767px) {
+  .site-footer {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
 }

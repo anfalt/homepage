@@ -80,14 +80,7 @@ $num_events_label = sprintf(
 				<?php echo esc_html($day_number); ?>
 			</time>
 		</h3>
-		<?php if (!empty($day['featured_events'])) : ?>
-			<?php
-			/* translators: %s: Events (plural). */
-			$has_featured_events_label = sprintf(__('Has featured %s', 'the-events-calendar'), $events_label_plural);
-			?>
-			<em class="tribe-events-calendar-month__mobile-events-icon tribe-events-calendar-month__mobile-events-icon--featured" aria-label="<?php echo esc_attr($has_featured_events_label); ?>" title="<?php echo esc_attr($has_featured_events_label); ?>">
-			</em>
-		<?php elseif (!empty($day['found_events'])) : ?>
+		<?php if (!empty($day['found_events'])) : ?>
 			<?php
 			/* translators: %s: Events (plural). */
 			$has_events_label = sprintf(__('Has %s', 'the-events-calendar'), $events_label_plural);

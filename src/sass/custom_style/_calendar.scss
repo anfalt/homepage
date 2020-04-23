@@ -393,7 +393,41 @@
   vertical-align: top;
   @include border-radius($badge-border-radius);
   @include transition($badge-transition);
+}
+.event-tag.badge:not(.tribe-events-calendar-list__event-header .badge) {
   top: 15px;
   margin-left: 10px;
   position: relative;
+}
+.tribe-events-calendar-day__event--featured
+  .tribe-events-calendar-day__event-details:before,
+.tribe-events-calendar-list__event-row--featured
+  .tribe-events-calendar-list__event-date-tag:before,
+.tribe-events-calendar-month__calendar-event--featured
+  .tribe-events-calendar-month__calendar-event-details:before,
+.tribe-events-calendar-month-mobile-events__mobile-event--featured
+  .tribe-events-calendar-month-mobile-events__mobile-event-details:before {
+  background-color: $secondary;
+  content: "";
+  height: 90%;
+  right: calc(100% - 3px);
+  position: absolute;
+  width: 3px;
+  top: -3px;
+}
+.tribe-events-calendar-month__calendar-event--featured,
+.tribe-events-calendar-day__event--featured,
+.tribe-events-calendar-list__event-row--featured,
+.tribe-events-calendar-month-mobile-events__mobile-event--featured {
+  font-weight: bold;
+}
+.tribe-events-calendar-month-mobile-events__mobile-event--featured {
+  position: relative;
+}
+.tribe-common .tribe-events-calendar-day__event-details,
+.tribe-common .tribe-events-calendar-month-mobile-events__mobile-event-details {
+  padding-left: 24px;
+}
+.tribe-common--breakpoint-medium.tribe-events .tribe-events-l-container {
+  padding-top: 0;
 }

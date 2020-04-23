@@ -35,7 +35,7 @@ $container = get_theme_mod('understrap_container_type');
 						the_archive_description('<div class="taxonomy-description">', '</div>');
 						?>
 					</header><!-- .page-header -->
-					<div class="postsContainer" data-tag="<?php single_tag_title() ?>"></div>
+					<div class="postsContainer" data-tag="<?php echo  get_queried_object()->slug ?>" data-infinite-loading="true"></div>
 
 
 				<?php else : ?>
@@ -46,8 +46,6 @@ $container = get_theme_mod('understrap_container_type');
 
 			</main><!-- #main -->
 
-			<!-- The pagination component -->
-			<?php understrap_pagination(); ?>
 
 
 

@@ -25,8 +25,7 @@ $display_end_date = $event->dates->start_display->format('H:i') !== $event->date
 
 <div class="tribe-events-calendar-month__calendar-event-datetime">
 	<?php if (!empty($event->featured)) : ?>
-		<em class="tribe-events-calendar-month__calendar-event-datetime-featured-icon tribe-common-svgicon tribe-common-svgicon--featured" aria-label="<?php esc_attr_e('Featured', 'the-events-calendar') ?>" title="<?php esc_attr_e('Featured', 'the-events-calendar') ?>">
-		</em>
+
 	<?php endif; ?>
 	<time datetime="<?php echo esc_attr($event->dates->start_display->format('H:i')); ?>">
 		<?php echo esc_html($event->dates->start_display->format($time_format)); ?>

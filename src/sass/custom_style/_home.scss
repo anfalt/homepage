@@ -21,26 +21,47 @@
 }
 
 #homePageSponsors {
-  opacity: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
-  text-align: center;
-  transition: opacity 0.25s ease-in-out;
-  -moz-transition: opacity 0.25s ease-in-out;
-  -webkit-transition: opacity 0.25s ease-in-out;
+  flex-wrap: wrap;
 }
+
 #homePageSponsors .sponsor {
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding: 20px;
+  padding: 20px;
   border-bottom: 1px solid $secondary;
-  max-width: 250px;
+  max-width: 280px;
+  max-height: 130px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sponsor:after {
+  content: "";
+  background: #dee2e6;
+  position: relative;
+  bottom: 0;
+  left: 20px;
+  z-index: 10;
+  height: 100%;
+  width: 1px;
+}
+.sponsor:before {
+  content: "";
+  background: #dee2e6;
+  position: relative;
+  bottom: 0;
+  right: 21px;
+  z-index: 10;
+  height: 100%;
+  width: 1px;
 }
 
 #homePageSponsors .sponsor img {
+  max-width: 230px;
   max-height: 120px;
-  max-width: 220px;
   transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
@@ -48,6 +69,7 @@
   transform: scale(1.05);
 }
 .upcomingEvent {
+  position: relative;
   display: flex;
   margin: 15px;
   margin-left: 0;
@@ -77,6 +99,27 @@
 .eventDetails {
   width: 100%;
 }
+#upcomingFeaturedEvents .eventDetails .eventDateTime:after {
+  content: $fa-var-bookmark;
+  font: normal normal normal 14px/1 FontAwesome;
+  color: $secondary;
+  position: relative;
+  left: 5px;
+  top: -1px;
+}
+
+#upcomingFeaturedEvents .upcomingEvent:before {
+  content: "";
+  position: absolute;
+  background-color: red;
+  height: 90%;
+  width: 3px;
+  left: 0px;
+  top: -5px;
+}
+.upcomingEvent > a {
+  text-decoration: none;
+}
 
 .eventDateMonth:after {
   display: block;
@@ -92,7 +135,7 @@
 .eventDateDay {
   font-size: 1.3rem;
   font-weight: bold;
-  z-index: 20;
+  z-index: 18;
 }
 
 .eventHeader {
@@ -101,4 +144,33 @@
 }
 .eventTags {
   margin-left: auto;
+}
+
+@media (min-width: 1200px), (max-width: 576px) {
+  #homePageSponsors .sponsor {
+    flex-direction: column;
+    width: 90%;
+  }
+
+  #homePageSponsors .sponsor:after,
+  #homePageSponsors .sponsor:before {
+    content: none;
+  }
+}
+
+@supports (filter: blur(1px)) {
+  .carousel-item {
+    transform: translateZ(0);
+  }
+  .carousel-item.enhanced {
+    animation: sharpen 0.5s both;
+  }
+  @keyframes sharpen {
+    from {
+      filter: blur(20px);
+    }
+    to {
+      filter: blur(0px);
+    }
+  }
 }

@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
 ?>
 
 
+
 <div class="wrapper" id="wrapper-footer">
 
 	<div class="container-fluid">

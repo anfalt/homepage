@@ -75,6 +75,10 @@ a.dropdown-flyout-item:hover,
   height: 100%;
 }
 
+.logo-container {
+  min-height: 70px;
+}
+
 @media (min-width: 768px) {
   #wrapper-navbar.hovered .menu-item:hover > i.dropdown-menu-arrow {
     border: solid rgba(20, 20, 20, 9);
@@ -247,6 +251,7 @@ a.dropdown-flyout-item:hover,
   .dropdown-menu-flyout .dropdown-flyout-item {
     color: white;
     font-size: 1.2rem;
+    display: inline;
   }
   .dropdown .nav-link {
     display: inline;

@@ -1,6 +1,7 @@
 <?php
 
-require_once(__DIR__ . "/lib/simple_html_dom.php");
+
+include_once(__DIR__ . "/lib/simple_html_dom.php");
 define('NU_LIGA_HOST', 'https://btv.liga.nu');
 define('TABLE_NAME_TEAMS', 'custom_score_teams');
 define('TABLE_NAME_TEAM_SCORES', 'custom_score_team_scores');
@@ -79,7 +80,7 @@ function startEventsSync()
 {
 
 
-    $teamData = getCombinedTeamData();
+    $teamData = getCombinedTeamData(null);
     $allEvents =   GetAllMatchEventPosts();
 
     foreach ($teamData as $team) {
@@ -268,7 +269,7 @@ function GetAllMatchEventPosts()
             'tax_query' => array(
                 array(
                     'taxonomy' => 'tribe_events_cat',
-                    'field' => 'term_id',
+                    'field' => 'term_slug',
                     'terms' => 22,
 
                 )
@@ -570,19 +571,23 @@ function score_cron_schedules($schedules)
     return $schedules;
 }
 
-function handle_get_team_data()
+function handle_get_team_data($request)
 {
-    return getCombinedTeamData();
+    return getCombinedTeamData($request);
 }
 
-function getCombinedTeamData()
+function getCombinedTeamData($request)
 {
+    $teamId = null;
+    if (isset($request)) {
+        $teamId = $request->get_param('teamId');
+    }
 
 
-    $combinedTeamsData = getAllRowsFromTable(TABLE_NAME_TEAMS, true);
-    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES, false);
+    $combinedTeamsData = getAllRowsFromTable(TABLE_NAME_TEAMS, $teamId, true);
+    $teamTables = getAllRowsFromTable(TABLE_NAME_TEAM_TABLES, $teamId, false);
     $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamTables, "teamRankings");
-    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES, false);
+    $teamScores = getAllRowsFromTable(TABLE_NAME_TEAM_SCORES, $teamId, false);
     $combinedTeamsData = enrichTeamData($combinedTeamsData, $teamScores, "teamScores");
     return $combinedTeamsData;
 }
@@ -607,13 +612,20 @@ function enrichTeamData($teamData, $additionalData, $enrichedPropName)
 
 
 
-function getAllRowsFromTable($table_name, $order)
+function getAllRowsFromTable($table_name, $teamId, $order)
 {
 
     global $wpdb;
-    $query = "SELECT * FROM `$table_name`";
+
+    $whereClause = "";
+
+    if (isset($teamId) && !empty($teamId)) {
+        $whereClause = "WHERE `$table_name`.`teamId`=" . $teamId;
+    }
+
+    $query = "SELECT * FROM `$table_name` $whereClause";
     if ($order) {
-        $query = "SELECT * FROM `$table_name` ORDER BY `$table_name`.`orderID` ASC";
+        $query = "SELECT * FROM `$table_name` $whereClause ORDER BY `$table_name`.`orderID` ASC";
     }
 
     $list = $wpdb->get_results($query);

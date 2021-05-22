@@ -28,6 +28,7 @@ $container = get_theme_mod('understrap_container_type');
 	<?php do_action('wp_body_open'); ?>
 	<div class="site" id="page">
 
+
 		<!-- ******************* The Navbar Area ******************* -->
 		<div id="wrapper-navbar" class="container-fluid" itemscope itemtype="http://schema.org/WebSite">
 			<div class="row">
@@ -35,10 +36,10 @@ $container = get_theme_mod('understrap_container_type');
 					<div class="nav-burger-menu"></div>
 				</div>
 				<div id="logo-container" class="col-4  col-md-1 text-center logo-container">
-					<a href="/" title="Home"><img src="/wp-content/uploads/2020/03/1860RosenheimLogo.png" /> </a>
+					<a href="/" title="Home"><img src="/wp-content/uploads/1860RosenheimLogo.png" /> </a>
 				</div>
 				<div id="logo-container-inverse" class="col-4  col-md-1 text-center logo-container">
-					<a href="/" title="Home"><img src="/wp-content/uploads/2020/03/1860RosenheimLogo_white.png" /> </a>
+					<a href="/" title="Home"><img src="/wp-content/uploads/1860RosenheimLogo_white.png" /> </a>
 				</div>
 				<div class="nav-background">
 
@@ -88,4 +89,6 @@ $container = get_theme_mod('understrap_container_type');
 					</div>
 				</div>
 			</div>
+
 		</div><!-- #wrapper-navbar end -->
+		<div id="breadcrumb-wrapper"><?php if (function_exists('the_breadcrumb')) the_breadcrumb(); ?></div>

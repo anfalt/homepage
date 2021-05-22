@@ -1,14 +1,92 @@
 (function ($) {
   $(document).ready(function () {
     var teamsContainer = $("#teamsContainer")[0];
+    var teamDetailContainer = $("#teamDetailContainer")[0];
     if (teamsContainer) {
       initTeams();
     }
+
+    if (teamDetailContainer) {
+      initTeamDetail();
+    }
+
+    function initTeamDetail() {
+      var teamId = $(teamDetailContainer).data("team-id");
+      $(teamDetailContainer).html(["1"].map(getTeamDetailPlaceHolder));
+      WP_1860.getData(
+        "/wp-json/custom-api/v1/teams?teamId=" + teamId,
+        handleLoadedTeamDetailData
+      );
+    }
+
     function initTeams() {
       $(teamsContainer).html(
         ["1", "2", "3", "4", "5", "6", "7", "8"].map(getTeamsPlaceHolder)
       );
       WP_1860.getData("/wp-json/custom-api/v1/teams", handleLoadedTeamData);
+    }
+
+    function getTeamDetailPlaceHolder() {
+      return `<div class="teamDetailPlaceholder">
+      <ul class="nav nav-pills" role="tablist">
+      <li class="nav-item">
+        <a href="#" class="btn btn-secondary">Tabelle</a>
+       </li>
+       <li class="nav-item">
+       <a href="#" class="btn btn-secondary">Begegnungen</a>
+        </li>
+     </ul>  
+      <div class="table-responsive">
+      <table class="table table-striped teamTable"  >
+        <thead>
+          <tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Mannschaft</th>
+            <th scope="col">Beg.</th>
+            <th scope="col">Punkte</th>
+            <th scope="col">Matchbilanz</th>
+            <th scope="col">Sätze</th>
+            <th scope="col">Spiele</th>
+          </tr>
+        </thead>
+        <tbody>
+     
+     ${["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+       .map(function (el) {
+         var classTD = "";
+         if (el % 2 == 1) {
+           classTD = "class='loading'";
+         }
+         return `  <tr>
+       <td colspan="7" ${classTD}><span></span></td>
+     
+       </tr>`;
+       })
+       .join("")}
+      
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+    }
+
+    function teamDetailTemplate(team) {
+      return ` <ul class="nav nav-pills" role="tablist">
+      <li class="nav-item">
+        <a href='#teamTable-${
+          team.teamId
+        }' class="btn btn-secondary nav-link showTeamRanking active" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamTable-${team.teamId}" id="teamTable-${team.teamId}-tab">Tabelle</a>
+       </li>
+       <li class="nav-item">
+       <a href="#teamMatches-${
+         team.teamId
+       }" class="btn btn-secondary nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamMatches-${team.teamId}" id="teamMatches-${team.teamId}-tab">Begegnungen</a>
+       </li>
+     </ul>  
+     <div class="tab-content">
+       ${teamTableTemplate(team)}
+       ${teamScoresTemplate(team)}
+     </div>`;
     }
 
     function getTeamsPlaceHolder() {
@@ -40,10 +118,15 @@
       $(teamsContainer).html(teamsHTML);
     }
 
+    function handleLoadedTeamDetailData(data) {
+      var teamDetailHTML = data.map(teamDetailTemplate);
+      $(teamDetailContainer).html(teamDetailHTML);
+    }
+
     function teamTemplate(team) {
-      var teamRanking = team.teamRankings.find(
-        (el) => el.teamName.indexOf("1860 Rosenheim") > -1
-      );
+      var teamRanking = team.teamRankings.filter(function (el) {
+        return el.teamName.indexOf("1860 Rosenheim") > -1;
+      })[0];
       if (!teamRanking) {
         teamRanking = { ranking: 0, points: "0:0" };
       }
@@ -79,13 +162,13 @@
               </div>
               </div>
              <div class="modals">
-             ${teamTableTemplate(team)}
-             ${teamScoresTemplate(team)}
+             ${teamTableTemplateModal(team)}
+             ${teamScoresTemplateModal(team)}
              </div>
               </div>`;
     }
 
-    function teamTableTemplate(team) {
+    function teamTableTemplateModal(team) {
       return `
       <div class="modal " id="teamTable-${team.teamId}">
           <div class="modal-dialog teamDetailModal" role="document">
@@ -99,7 +182,7 @@
                       </button>
                     </div>
                <div class="modal-body">
-                 <table class="table teamTable">
+                 <table class="table teamTable table-striped">
                    <thead>
                      <tr>
                        <th scope="col">Rang</th>
@@ -136,6 +219,50 @@
     }
 
     function teamScoresTemplate(team) {
+      return `<div class="table-responsive tab-pane fade"  role="tabpanel" id="teamMatches-${
+        team.teamId
+      }" aria-labelledby="teamTable-${team.teamId}-tab">
+      <table class="table table-striped teamMatches">
+      <thead>
+        <tr>
+          <th scope="col">Datum</th>
+          <th scope="col">Heimannschaft</th>
+          <th scope="col">Gastmannschaft</th>
+          <th scope="col">Matchpunkte</th>
+          <th scope="col">Spielbericht</th>
+        </tr>
+      </thead>
+      <tbody>
+       ${team.teamScores.map(teamScoreRow).join("")}
+      </tbody>
+    </table>
+    </div>`;
+    }
+
+    function teamTableTemplate(team) {
+      return `<div class="table-responsive tab-pane fade show active" role="tabpanel" aria-labelledby="teamTable-${
+        team.teamId
+      }-tab" id="teamTable-${team.teamId}">
+      <table class="table  table-striped  teamTable"  >
+        <thead>
+          <tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Mannschaft</th>
+            <th scope="col">Beg.</th>
+            <th scope="col">Punkte</th>
+            <th scope="col">Matchbilanz</th>
+            <th scope="col">Sätze</th>
+            <th scope="col">Spiele</th>
+          </tr>
+        </thead>
+        <tbody>
+         ${team.teamRankings.map(teamRankingRow).join("")}
+        </tbody>
+      </table>
+      </div>`;
+    }
+
+    function teamScoresTemplateModal(team) {
       return ` <div class="modal " id="teamMatches-${team.teamId}">
                  <div class="modal-dialog teamDetailModal" role="document">
                    <div class="modal-content">
@@ -148,7 +275,7 @@
                          </button>
                        </div>
                     <div class="modal-body">
-                     <table class="table teamMatches">
+                     <table class="table teamMatches table-striped">
                      <thead>
                        <tr>
                          <th scope="col">Datum</th>

@@ -7037,17 +7037,37 @@
   var loading = false;
 
   WP_1860.initPostContaier = function (index, el) {
-    $(el).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5"].map(WP_1860.postPlaceholderTemplate));
-    var tags = $(el).data("tag");
-    WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (data) {
-      renderPosts(data, el);
-    });
+    if ($(el).data("post-id")) {
+      var postIds = $(el).data("post-id").toString();
+      $(el).html(postIds.split(",").map(WP_1860.postPlaceholderTemplate));
+      WP_1860.getData("/wp-json/custom-api/v1/posts?postId=" + postIds, function (data) {
+        renderPosts(data, el);
+      });
+    } else {
+      $(el).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5"].map(WP_1860.postPlaceholderTemplate));
+      var tags = $(el).data("tag");
+
+      if (tags) {
+        WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (data) {
+          renderPosts(data, el);
+        });
+      } else {
+        WP_1860.getData("/wp-json/custom-api/v1/allPosts", function (data) {
+          renderPosts(data, el);
+        });
+      }
+    }
   };
 
   function renderPosts(data, postContainer) {
     page = data.page;
     var posts = data.posts;
     postCountLastRequest = posts.length;
+
+    if (posts.length == 0 && data.page == 1) {
+      $(postContainer).html("<div class='no-post-found'><p>Es wurden keine Einträge gefunden</p></div>");
+    }
+
     var postsHtml = posts.map(WP_1860.postsTemplate);
     $(".postPlaceholder").remove();
     $(postContainer).append(postsHtml);
@@ -7055,6 +7075,8 @@
   }
 
   WP_1860.postsTemplate = function (post) {
+    var customPosttitle = post.custom_fields["customPostTitle"];
+    var title = customPosttitle ? customPosttitle : post.title;
     post.tags = post.tags ? post.tags : [];
     var excerpt = post.excerpt ? post.excerpt : post.content;
     return `<div class="post wrapper">
@@ -7070,7 +7092,7 @@
                       </div>
                       <div class="col-12 col-lg-8 postTextContainer">
                           <div class="postDetails px-3">
-                              <h4>${post.title}</h4>
+                              <h4>${title}</h4>
                              <span>${excerpt}</span>
                              <div class="further-btn-wrapper">
                               <button class="btn btn-secondary">
@@ -7087,16 +7109,29 @@
 
   function getPostImageHTML(post) {
     if (post.type == "tribe_events" && post.custom_fields && post.custom_fields["_EventStartDate"]) {
-      var eventDate = new Date(post.custom_fields["_EventStartDate"][0]);
+      var localScheme = "default";
+
+      if (window.document.documentMode) {
+        localScheme = undefined;
+      }
+
+      var startDate = post.custom_fields["_EventStartDate"][0];
+      var eventDateYear = parseInt(startDate.split(" ")[0].split("-")[0]);
+      var eventDateMonth = parseInt(startDate.split(" ")[0].split("-")[1]);
+      var eventDateDay = parseInt(startDate.split(" ")[0].split("-")[2]);
+      var eventDateHour = parseInt(startDate.split(" ")[1].split(":")[0]);
+      var eventDateMinute = parseInt(startDate.split(" ")[1].split(":")[1]);
+      var eventDateSeconds = parseInt(startDate.split(" ")[1].split(":")[2]);
+      var eventDate = new Date(eventDateYear, eventDateMonth - 1, eventDateDay, eventDateHour, eventDateMinute, eventDateSeconds);
       return `<div class="eventDateTimeContainer">
-          <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+          <span class="eventDateMonth">${eventDate.toLocaleString(localScheme, {
         month: "short"
       })}</span>
-        <span class="eventDateDay">${eventDate.toLocaleString("default", {
+        <span class="eventDateDay">${eventDate.toLocaleString(localScheme, {
         day: "2-digit"
       })}</span>
       </div>
-      <div class="eventDateTime">${eventDate.toLocaleString("default", {
+      <div class="eventDateTime">${eventDate.toLocaleString(localScheme, {
         weekday: "short",
         hour: "2-digit",
         minute: "2-digit"
@@ -7133,7 +7168,9 @@
   WP_1860.tagBadgesTemplates = function (tag) {
     var url = "/tag/" + tag.slug;
 
-    if (tag.slug.indexOf("-tag")) {
+    if (tag.description) {
+      url = tag.description;
+    } else if (tag.slug.indexOf("-tag")) {
       url = url.replace("tag/", "");
       url = url.replace("-tag", "");
     }
@@ -7182,9 +7219,16 @@
     $(postsContainer).append(["placeholder1", "placeholder2"].map(WP_1860.postPlaceholderTemplate));
     loading = true;
     var tags = $(postsContainer).data("tag");
-    page = WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags + "&page= " + (page + 1), function (data) {
-      renderPosts(data, postsContainer);
-    });
+
+    if (tags) {
+      page = WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags + "&page= " + (page + 1), function (data) {
+        renderPosts(data, postsContainer);
+      });
+    } else {
+      page = WP_1860.getData("/wp-json/custom-api/v1/allPosts?page= " + (page + 1), function (data) {
+        renderPosts(data, postsContainer);
+      });
+    }
   }
 
   $(document).ready(function () {
@@ -7264,6 +7308,12 @@
       } else {
         body.addClass("nav-is-open");
       }
+    });
+    $(".dropdown.nav-link").click(function (e) {
+      e.stopPropagation();
+    });
+    $(".dropdown-flyout-item").click(function (e) {
+      e.stopPropagation();
     });
     dropdownNav.click(function (event) {
       var el = $(this);
@@ -7355,7 +7405,7 @@
 
     function initHomePageSponsors() {
       $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4"].map(sponsorPlaceHolderTemplate));
-      WP_1860.getData("/wp-json/custom-api/v1/images/homePageSponsors", renderHomePageSponsors);
+      WP_1860.getData("/wp-json/custom-api/v1/images/premiumsponsoren", renderHomePageSponsors);
     }
 
     function initHomePagePosts() {
@@ -7381,8 +7431,12 @@
     }
 
     function renderUpcomingEvents(data) {
-      var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
-      $(upcomingEvents).html(upcomingEventsHTML);
+      if (data.events.length == 0) {
+        $(upcomingEvents).html("<div class='no-events-found'><p>Es wurden keine Termine in den nächsten 4 Wochen gefunden</p></div>");
+      } else {
+        var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
+        $(upcomingEvents).html(upcomingEventsHTML);
+      }
     }
 
     function sponsorPlaceHolderTemplate() {
@@ -7408,14 +7462,26 @@
     }
 
     function upcomingEventsTemplate(event) {
-      var eventDate = new Date(event.start_date);
+      var localScheme = "default";
+
+      if (window.document.documentMode) {
+        localScheme = undefined;
+      }
+
+      var eventDateYear = parseInt(event.start_date.split(" ")[0].split("-")[0]);
+      var eventDateMonth = parseInt(event.start_date.split(" ")[0].split("-")[1]);
+      var eventDateDay = parseInt(event.start_date.split(" ")[0].split("-")[2]);
+      var eventDateHour = parseInt(event.start_date.split(" ")[1].split(":")[0]);
+      var eventDateMinute = parseInt(event.start_date.split(" ")[1].split(":")[1]);
+      var eventDateSeconds = parseInt(event.start_date.split(" ")[1].split(":")[2]);
+      var eventDate = new Date(eventDateYear, eventDateMonth - 1, eventDateDay, eventDateHour, eventDateMinute, eventDateSeconds);
       return `<div class="upcomingEvent">
       <a href="${event.url}">
       <div class="eventDateTimeContainer">
-      <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+      <span class="eventDateMonth">${eventDate.toLocaleString(localScheme, {
         month: "short"
       })}</span>
-      <span class="eventDateDay">${eventDate.toLocaleString("default", {
+      <span class="eventDateDay">${eventDate.toLocaleString(localScheme, {
         day: "2-digit"
       })}</span>
     
@@ -7423,7 +7489,7 @@
       </a>
       <div class="eventDetails">
            <div class="eventHeader">
-           <div class="eventDateTime">${eventDate.toLocaleString("default", {
+           <div class="eventDateTime">${eventDate.toLocaleString(localScheme, {
         weekday: "short",
         hour: "2-digit",
         minute: "2-digit"
@@ -7467,18 +7533,18 @@
       var baseUrl = "/wp-json/tribe/events/v1/events/";
       var dateInNextTwoWeeks = getCurrentDateWithWeekOffset(4);
       var filterEndDate = dateInNextTwoWeeks.getFullYear() + "-" + ("0" + (dateInNextTwoWeeks.getMonth() + 1)).slice(-2) + "-" + ("0" + dateInNextTwoWeeks.getDate()).slice(-2);
-      return baseUrl + `?start_date=${filterStartDate}&end_date=${filterEndDate}&per_page=15&featured=true`;
+      return baseUrl + `?start_date=${filterStartDate}&end_date=${filterEndDate}&per_page=5&featured=true`;
     }
 
     function loadHeroImages() {
-      var win, doc, header, enhancedClass; // Quit early if older browser (e.g. IE 8).
+      var win, doc, header, enhancedClass;
+      win = window;
+      doc = win.document; // Quit early if older browser (e.g. IE 8).
 
-      if (!("addEventListener" in window)) {
+      if (!("addEventListener" in window) || !doc.querySelector("#homeHeroImageLoading")) {
         return;
       }
 
-      win = window;
-      doc = win.document;
       header = doc.querySelectorAll(".carousel-item");
       enhancedClass = "enhanced";
 
@@ -7546,14 +7612,14 @@
 
   function initPremiumSponors(sponsorContainer) {
     $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5", "placeholder6", "placeholder7", "placeholder8"].map(sponsorOverviewPlaceHolderTemplate));
-    WP_1860.getData("/wp-json/custom-api/v1/images/premiumSponsor", function (data) {
+    WP_1860.getData("/wp-json/custom-api/v1/images/premiumsponsoren", function (data) {
       renderSponsors(data, sponsorContainer);
     });
   }
 
   function initSponors(sponsorContainer) {
     $(sponsorContainer).html(["placeholder1", "placeholder2", "placeholder3", "placeholder4", "placeholder5", "placeholder6", "placeholder7", "placeholder8"].map(sponsorOverviewPlaceHolderTemplate));
-    WP_1860.getData("/wp-json/custom-api/v1/images/defaultSponsor", function (data) {
+    WP_1860.getData("/wp-json/custom-api/v1/images/standardsponsoren", function (data) {
       renderSponsors(data, sponsorContainer);
     });
   }
@@ -7565,47 +7631,103 @@
   }
 
   function sponsorOverviewTemplate(sponsor) {
-    return `<div class="cardWrapper">
+    return `<div class="sponsor cardWrapper">
   <a href="${sponsor.link}" target="_blank">
-    <div class="card" style="width: 16rem;">
-      <div class="card-header">
-         <span> ${sponsor.title}</span>  
-          <button class="btn btn-secondary">
-          <i class="fa fa-angle-double-right"></i>
-          </button>
-      </div>
-      <div class="card-body">
-        <img src="${sponsor.imageURL}" alt="${sponsor.post_title}"/>
-        </div>
-  </div>
+         <div class="image-wrapper">
+           <img src="${sponsor.imageURL}" alt="${sponsor.post_title}"/>
+         </div>
   </a>
   </div>`;
   }
 
   function sponsorOverviewPlaceHolderTemplate() {
     return `<div class="cardWrapper cardPlaceholder">
-    <div class="card" style="width: 16rem;">
-      <div class="card-header loading">
-      </div>
-      <div class="card-body">
         <div class="sponsorPlaceholder loading">          
         </div>
-        </div>
-  </div>
   </div>`;
   }
 })(jQuery);
 (function ($) {
   $(document).ready(function () {
     var teamsContainer = $("#teamsContainer")[0];
+    var teamDetailContainer = $("#teamDetailContainer")[0];
 
     if (teamsContainer) {
       initTeams();
     }
 
+    if (teamDetailContainer) {
+      initTeamDetail();
+    }
+
+    function initTeamDetail() {
+      var teamId = $(teamDetailContainer).data("team-id");
+      $(teamDetailContainer).html(["1"].map(getTeamDetailPlaceHolder));
+      WP_1860.getData("/wp-json/custom-api/v1/teams?teamId=" + teamId, handleLoadedTeamDetailData);
+    }
+
     function initTeams() {
       $(teamsContainer).html(["1", "2", "3", "4", "5", "6", "7", "8"].map(getTeamsPlaceHolder));
       WP_1860.getData("/wp-json/custom-api/v1/teams", handleLoadedTeamData);
+    }
+
+    function getTeamDetailPlaceHolder() {
+      return `<div class="teamDetailPlaceholder">
+      <ul class="nav nav-pills" role="tablist">
+      <li class="nav-item">
+        <a href="#" class="btn btn-secondary">Tabelle</a>
+       </li>
+       <li class="nav-item">
+       <a href="#" class="btn btn-secondary">Begegnungen</a>
+        </li>
+     </ul>  
+      <div class="table-responsive">
+      <table class="table table-striped teamTable"  >
+        <thead>
+          <tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Mannschaft</th>
+            <th scope="col">Beg.</th>
+            <th scope="col">Punkte</th>
+            <th scope="col">Matchbilanz</th>
+            <th scope="col">Sätze</th>
+            <th scope="col">Spiele</th>
+          </tr>
+        </thead>
+        <tbody>
+     
+     ${["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"].map(function (el) {
+        var classTD = "";
+
+        if (el % 2 == 1) {
+          classTD = "class='loading'";
+        }
+
+        return `  <tr>
+       <td colspan="7" ${classTD}><span></span></td>
+     
+       </tr>`;
+      }).join("")}
+      
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+    }
+
+    function teamDetailTemplate(team) {
+      return ` <ul class="nav nav-pills" role="tablist">
+      <li class="nav-item">
+        <a href='#teamTable-${team.teamId}' class="btn btn-secondary nav-link showTeamRanking active" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamTable-${team.teamId}" id="teamTable-${team.teamId}-tab">Tabelle</a>
+       </li>
+       <li class="nav-item">
+       <a href="#teamMatches-${team.teamId}" class="btn btn-secondary nav-link showTeamRanking" data-toggle="pill" role="tab" aria-selected="true" aria-controls="teamMatches-${team.teamId}" id="teamMatches-${team.teamId}-tab">Begegnungen</a>
+       </li>
+     </ul>  
+     <div class="tab-content">
+       ${teamTableTemplate(team)}
+       ${teamScoresTemplate(team)}
+     </div>`;
     }
 
     function getTeamsPlaceHolder() {
@@ -7637,8 +7759,15 @@
       $(teamsContainer).html(teamsHTML);
     }
 
+    function handleLoadedTeamDetailData(data) {
+      var teamDetailHTML = data.map(teamDetailTemplate);
+      $(teamDetailContainer).html(teamDetailHTML);
+    }
+
     function teamTemplate(team) {
-      var teamRanking = team.teamRankings.find(el => el.teamName.indexOf("1860 Rosenheim") > -1);
+      var teamRanking = team.teamRankings.filter(function (el) {
+        return el.teamName.indexOf("1860 Rosenheim") > -1;
+      })[0];
 
       if (!teamRanking) {
         teamRanking = {
@@ -7669,13 +7798,13 @@
               </div>
               </div>
              <div class="modals">
-             ${teamTableTemplate(team)}
-             ${teamScoresTemplate(team)}
+             ${teamTableTemplateModal(team)}
+             ${teamScoresTemplateModal(team)}
              </div>
               </div>`;
     }
 
-    function teamTableTemplate(team) {
+    function teamTableTemplateModal(team) {
       return `
       <div class="modal " id="teamTable-${team.teamId}">
           <div class="modal-dialog teamDetailModal" role="document">
@@ -7687,7 +7816,7 @@
                       </button>
                     </div>
                <div class="modal-body">
-                 <table class="table teamTable">
+                 <table class="table teamTable table-striped">
                    <thead>
                      <tr>
                        <th scope="col">Rang</th>
@@ -7724,6 +7853,46 @@
     }
 
     function teamScoresTemplate(team) {
+      return `<div class="table-responsive tab-pane fade"  role="tabpanel" id="teamMatches-${team.teamId}" aria-labelledby="teamTable-${team.teamId}-tab">
+      <table class="table table-striped teamMatches">
+      <thead>
+        <tr>
+          <th scope="col">Datum</th>
+          <th scope="col">Heimannschaft</th>
+          <th scope="col">Gastmannschaft</th>
+          <th scope="col">Matchpunkte</th>
+          <th scope="col">Spielbericht</th>
+        </tr>
+      </thead>
+      <tbody>
+       ${team.teamScores.map(teamScoreRow).join("")}
+      </tbody>
+    </table>
+    </div>`;
+    }
+
+    function teamTableTemplate(team) {
+      return `<div class="table-responsive tab-pane fade show active" role="tabpanel" aria-labelledby="teamTable-${team.teamId}-tab" id="teamTable-${team.teamId}">
+      <table class="table  table-striped  teamTable"  >
+        <thead>
+          <tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Mannschaft</th>
+            <th scope="col">Beg.</th>
+            <th scope="col">Punkte</th>
+            <th scope="col">Matchbilanz</th>
+            <th scope="col">Sätze</th>
+            <th scope="col">Spiele</th>
+          </tr>
+        </thead>
+        <tbody>
+         ${team.teamRankings.map(teamRankingRow).join("")}
+        </tbody>
+      </table>
+      </div>`;
+    }
+
+    function teamScoresTemplateModal(team) {
       return ` <div class="modal " id="teamMatches-${team.teamId}">
                  <div class="modal-dialog teamDetailModal" role="document">
                    <div class="modal-content">
@@ -7734,7 +7903,7 @@
                          </button>
                        </div>
                     <div class="modal-body">
-                     <table class="table teamMatches">
+                     <table class="table teamMatches table-striped">
                      <thead>
                        <tr>
                          <th scope="col">Datum</th>

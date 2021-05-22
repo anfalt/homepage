@@ -21,7 +21,7 @@
 $time_format      = tribe_get_time_format();
 $display_end_date = $event->dates->start_display->format('H:i') !== $event->dates->end_display->format('H:i');
 ?>
-<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', ', ', '</span>'); ?>
+<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', '</span><span class="event-tag badge badge-secondary">', '</span>'); ?>
 
 <div class="tribe-events-calendar-month__calendar-event-datetime">
 	<?php if (!empty($event->featured)) : ?>

@@ -53,7 +53,7 @@
         )
       );
       WP_1860.getData(
-        "/wp-json/custom-api/v1/images/homePageSponsors",
+        "/wp-json/custom-api/v1/images/premiumsponsoren",
         renderHomePageSponsors
       );
     }
@@ -88,8 +88,14 @@
     }
 
     function renderUpcomingEvents(data) {
-      var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
-      $(upcomingEvents).html(upcomingEventsHTML);
+      if (data.events.length == 0) {
+        $(upcomingEvents).html(
+          "<div class='no-events-found'><p>Es wurden keine Termine in den nächsten 4 Wochen gefunden</p></div>"
+        );
+      } else {
+        var upcomingEventsHTML = data.events.map(upcomingEventsTemplate);
+        $(upcomingEvents).html(upcomingEventsHTML);
+      }
     }
 
     function sponsorPlaceHolderTemplate() {
@@ -115,14 +121,45 @@
     }
 
     function upcomingEventsTemplate(event) {
-      var eventDate = new Date(event.start_date);
+      var localScheme = "default";
+      if (window.document.documentMode) {
+        localScheme = undefined;
+      }
+
+      var eventDateYear = parseInt(
+        event.start_date.split(" ")[0].split("-")[0]
+      );
+      var eventDateMonth = parseInt(
+        event.start_date.split(" ")[0].split("-")[1]
+      );
+      var eventDateDay = parseInt(event.start_date.split(" ")[0].split("-")[2]);
+
+      var eventDateHour = parseInt(
+        event.start_date.split(" ")[1].split(":")[0]
+      );
+      var eventDateMinute = parseInt(
+        event.start_date.split(" ")[1].split(":")[1]
+      );
+      var eventDateSeconds = parseInt(
+        event.start_date.split(" ")[1].split(":")[2]
+      );
+
+      var eventDate = new Date(
+        eventDateYear,
+        eventDateMonth - 1,
+        eventDateDay,
+        eventDateHour,
+        eventDateMinute,
+        eventDateSeconds
+      );
+
       return `<div class="upcomingEvent">
       <a href="${event.url}">
       <div class="eventDateTimeContainer">
-      <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+      <span class="eventDateMonth">${eventDate.toLocaleString(localScheme, {
         month: "short",
       })}</span>
-      <span class="eventDateDay">${eventDate.toLocaleString("default", {
+      <span class="eventDateDay">${eventDate.toLocaleString(localScheme, {
         day: "2-digit",
       })}</span>
     
@@ -130,7 +167,7 @@
       </a>
       <div class="eventDetails">
            <div class="eventHeader">
-           <div class="eventDateTime">${eventDate.toLocaleString("default", {
+           <div class="eventDateTime">${eventDate.toLocaleString(localScheme, {
              weekday: "short",
              hour: "2-digit",
              minute: "2-digit",
@@ -195,20 +232,21 @@
         ("0" + dateInNextTwoWeeks.getDate()).slice(-2);
       return (
         baseUrl +
-        `?start_date=${filterStartDate}&end_date=${filterEndDate}&per_page=15&featured=true`
+        `?start_date=${filterStartDate}&end_date=${filterEndDate}&per_page=5&featured=true`
       );
     }
 
     function loadHeroImages() {
       var win, doc, header, enhancedClass;
-
-      // Quit early if older browser (e.g. IE 8).
-      if (!("addEventListener" in window)) {
-        return;
-      }
-
       win = window;
       doc = win.document;
+      // Quit early if older browser (e.g. IE 8).
+      if (
+        !("addEventListener" in window) ||
+        !doc.querySelector("#homeHeroImageLoading")
+      ) {
+        return;
+      }
 
       header = doc.querySelectorAll(".carousel-item");
       enhancedClass = "enhanced";

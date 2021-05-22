@@ -32,8 +32,17 @@
       }
     });
 
+    $(".dropdown.nav-link").click(function (e) {
+      e.stopPropagation();
+    });
+
+    $(".dropdown-flyout-item").click(function (e) {
+      e.stopPropagation();
+    });
+
     dropdownNav.click(function (event) {
       var el = $(this);
+
       if (el.hasClass("show-submenu")) {
         $(".show-submenu").removeClass("show-submenu");
       } else {

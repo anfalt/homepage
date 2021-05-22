@@ -25,7 +25,7 @@ $classes['tribe-events-calendar-month-mobile-events__mobile-event--featured'] = 
 	<?php $this->template('month/mobile-events/mobile-day/mobile-event/featured-image', ['event' => $event]); ?>
 
 	<div class="tribe-events-calendar-month-mobile-events__mobile-event-details">
-		<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', ', ', '</span>'); ?>
+		<?php echo get_the_term_list(get_the_ID(), 'post_tag', '<span class="event-tag badge badge-secondary">', '</span><span class="event-tag badge badge-secondary">', '</span>'); ?>
 		<?php $this->template('month/mobile-events/mobile-day/mobile-event/date', ['event' => $event]); ?>
 		<?php $this->template('month/mobile-events/mobile-day/mobile-event/title', ['event' => $event]); ?>
 		<?php $this->template('month/mobile-events/mobile-day/mobile-event/cost', ['event' => $event]); ?>

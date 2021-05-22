@@ -4,27 +4,52 @@
   var loading = false;
 
   WP_1860.initPostContaier = function (index, el) {
-    $(el).html(
-      [
-        "placeholder1",
-        "placeholder2",
-        "placeholder3",
-        "placeholder4",
-        "placeholder5",
-      ].map(WP_1860.postPlaceholderTemplate)
-    );
-    var tags = $(el).data("tag");
-    WP_1860.getData("/wp-json/custom-api/v1/allPosts?tags=" + tags, function (
-      data
-    ) {
-      renderPosts(data, el);
-    });
+    if ($(el).data("post-id")) {
+      var postIds = $(el).data("post-id").toString();
+
+      $(el).html(postIds.split(",").map(WP_1860.postPlaceholderTemplate));
+
+      WP_1860.getData(
+        "/wp-json/custom-api/v1/posts?postId=" + postIds,
+        function (data) {
+          renderPosts(data, el);
+        }
+      );
+    } else {
+      $(el).html(
+        [
+          "placeholder1",
+          "placeholder2",
+          "placeholder3",
+          "placeholder4",
+          "placeholder5",
+        ].map(WP_1860.postPlaceholderTemplate)
+      );
+      var tags = $(el).data("tag");
+      if (tags) {
+        WP_1860.getData(
+          "/wp-json/custom-api/v1/allPosts?tags=" + tags,
+          function (data) {
+            renderPosts(data, el);
+          }
+        );
+      } else {
+        WP_1860.getData("/wp-json/custom-api/v1/allPosts", function (data) {
+          renderPosts(data, el);
+        });
+      }
+    }
   };
 
   function renderPosts(data, postContainer) {
     page = data.page;
     var posts = data.posts;
     postCountLastRequest = posts.length;
+    if (posts.length == 0 && data.page == 1) {
+      $(postContainer).html(
+        "<div class='no-post-found'><p>Es wurden keine Einträge gefunden</p></div>"
+      );
+    }
     var postsHtml = posts.map(WP_1860.postsTemplate);
     $(".postPlaceholder").remove();
     $(postContainer).append(postsHtml);
@@ -32,6 +57,8 @@
   }
 
   WP_1860.postsTemplate = function (post) {
+    var customPosttitle = post.custom_fields["customPostTitle"];
+    var title = customPosttitle ? customPosttitle : post.title;
     post.tags = post.tags ? post.tags : [];
     var excerpt = post.excerpt ? post.excerpt : post.content;
 
@@ -48,7 +75,7 @@
                       </div>
                       <div class="col-12 col-lg-8 postTextContainer">
                           <div class="postDetails px-3">
-                              <h4>${post.title}</h4>
+                              <h4>${title}</h4>
                              <span>${excerpt}</span>
                              <div class="further-btn-wrapper">
                               <button class="btn btn-secondary">
@@ -69,16 +96,38 @@
       post.custom_fields &&
       post.custom_fields["_EventStartDate"]
     ) {
-      var eventDate = new Date(post.custom_fields["_EventStartDate"][0]);
+      var localScheme = "default";
+      if (window.document.documentMode) {
+        localScheme = undefined;
+      }
+
+      var startDate = post.custom_fields["_EventStartDate"][0];
+      var eventDateYear = parseInt(startDate.split(" ")[0].split("-")[0]);
+      var eventDateMonth = parseInt(startDate.split(" ")[0].split("-")[1]);
+      var eventDateDay = parseInt(startDate.split(" ")[0].split("-")[2]);
+
+      var eventDateHour = parseInt(startDate.split(" ")[1].split(":")[0]);
+      var eventDateMinute = parseInt(startDate.split(" ")[1].split(":")[1]);
+      var eventDateSeconds = parseInt(startDate.split(" ")[1].split(":")[2]);
+
+      var eventDate = new Date(
+        eventDateYear,
+        eventDateMonth - 1,
+        eventDateDay,
+        eventDateHour,
+        eventDateMinute,
+        eventDateSeconds
+      );
+
       return `<div class="eventDateTimeContainer">
-          <span class="eventDateMonth">${eventDate.toLocaleString("default", {
+          <span class="eventDateMonth">${eventDate.toLocaleString(localScheme, {
             month: "short",
           })}</span>
-        <span class="eventDateDay">${eventDate.toLocaleString("default", {
+        <span class="eventDateDay">${eventDate.toLocaleString(localScheme, {
           day: "2-digit",
         })}</span>
       </div>
-      <div class="eventDateTime">${eventDate.toLocaleString("default", {
+      <div class="eventDateTime">${eventDate.toLocaleString(localScheme, {
         weekday: "short",
         hour: "2-digit",
         minute: "2-digit",
@@ -116,7 +165,9 @@
 
   WP_1860.tagBadgesTemplates = function (tag) {
     var url = "/tag/" + tag.slug;
-    if (tag.slug.indexOf("-tag")) {
+    if (tag.description) {
+      url = tag.description;
+    } else if (tag.slug.indexOf("-tag")) {
       url = url.replace("tag/", "");
       url = url.replace("-tag", "");
     }
@@ -166,12 +217,21 @@
     );
     loading = true;
     var tags = $(postsContainer).data("tag");
-    page = WP_1860.getData(
-      "/wp-json/custom-api/v1/allPosts?tags=" + tags + "&page= " + (page + 1),
-      function (data) {
-        renderPosts(data, postsContainer);
-      }
-    );
+    if (tags) {
+      page = WP_1860.getData(
+        "/wp-json/custom-api/v1/allPosts?tags=" + tags + "&page= " + (page + 1),
+        function (data) {
+          renderPosts(data, postsContainer);
+        }
+      );
+    } else {
+      page = WP_1860.getData(
+        "/wp-json/custom-api/v1/allPosts?page= " + (page + 1),
+        function (data) {
+          renderPosts(data, postsContainer);
+        }
+      );
+    }
   }
 
   $(document).ready(function () {

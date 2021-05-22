@@ -26,6 +26,7 @@ if (empty($disable_event_search)) {
 	$header_classes[] = 'tribe-events-header--has-event-search';
 }
 ?>
+
 <div <?php tribe_classes($container_classes); ?> data-js="tribe-events-view" data-view-rest-nonce="<?php echo esc_attr($rest_nonce); ?>" data-view-rest-url="<?php echo esc_url($rest_url); ?>" data-view-manage-url="<?php echo esc_attr($should_manage_url); ?>" <?php foreach ($container_data as $key => $value) : ?> data-view-<?php echo esc_attr($key) ?>="<?php echo esc_attr($value) ?>" <?php endforeach; ?> <?php if (!empty($breakpoint_pointer)) : ?> data-view-breakpoint-pointer="<?php echo esc_attr($breakpoint_pointer); ?>" <?php endif; ?>>
 	<div class="tribe-common-l-container tribe-events-l-container">
 		<?php $this->template('components/loader', ['text' => __('Loading...', 'the-events-calendar')]); ?>
@@ -45,6 +46,7 @@ if (empty($disable_event_search)) {
 
 			<?php $this->template('month/top-bar'); ?>
 		</header>
+
 
 		<?php $this->template('components/filter-bar'); ?>
 

@@ -17,9 +17,9 @@ if (!(filter_var($mail, FILTER_VALIDATE_EMAIL))) {
     return;
 }
 
-$recieptMailSent = sendRecieptMail('andreas.faltermaier@gmail.com', $givenName, $familyName, $message, $mail);
+$recieptMailSent = sendRecieptMail('info@tc1860rosenheim.de', $givenName, $familyName, $message, $mail);
 
-$messageMailSent = sendMessageMail('andreas.faltermaier@gmail.com', $givenName, $familyName, $message, $mail);
+$messageMailSent = sendMessageMail('info@tc1860rosenheim.de', $givenName, $familyName, $message, $mail);
 
 if ($messageMailSent && $recieptMailSent) {
 
@@ -46,7 +46,7 @@ function sendRecieptMail($tennisMail, $givenName, $familyName, $message, $mail)
     return $success == "1";
 }
 
-function sendMessageMail($tennisMail, $givenName, $familyName, $nachricht, $mail)
+function sendMessageMail($tennisMail, $givenName, $familyName, $message, $mail)
 {
 
     $mailHtml = "<html><body><p>Neue Kontaktanfrage von Homepage</p>";

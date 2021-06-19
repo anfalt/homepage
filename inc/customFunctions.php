@@ -220,6 +220,13 @@ function handle_get_images($data)
 
     $images = getImagesFromFolder($cat);
 
+    usort($images, function ($a, $b) {
+        $orderValueA = intval($a->{'menu-order'}) != 0 ? intval($a->{'menu-order'}) : 999999999;
+        $orderValueB = intval($b->{'menu-order'}) != 0 ? intval($b->{'menu-order'}) : 999999999;
+        return $orderValueA - $orderValueB;
+    });
+
+
     return $images;
 }
 

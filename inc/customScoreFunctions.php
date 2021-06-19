@@ -1,7 +1,23 @@
 <?php
+require __DIR__ . '/../vendor/autoload.php';
+
+use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Page;
+use HeadlessChromium\Communication\Message;
+
+
+global $browserFactory;
+$browserFactory = new BrowserFactory();
+
+
+ini_set('display_errors', 1);
+
 
 
 include_once(__DIR__ . "/lib/simple_html_dom.php");
+
+
+
 define('NU_LIGA_HOST', 'https://btv.liga.nu');
 define('TABLE_NAME_TEAMS', 'custom_score_teams');
 define('TABLE_NAME_TEAM_SCORES', 'custom_score_team_scores');
@@ -35,45 +51,71 @@ add_action('rest_api_init', function () {
 
 add_filter('the_posts', 'include_customfields_query');
 
-
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool
+    {
+        return '' === $needle || false !== strpos($haystack, $needle);
+    }
+}
 
 
 function custom_score_team_sync()
 {
     if (isset($_POST['sync_url'])) {
         $syncUrl = $_POST['sync_url'];
-        startTeamSync($syncUrl);
     }
 }
 
 function getHtml($url)
 {
 
-    $ch = curl_init();
-    $timeout = 5;
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    $data = curl_exec($ch);
-    curl_close($ch);
-    $html = str_get_html($data);
-    return $html;
+    global $browserFactory;
+    $browser =  $browserFactory->createBrowser();
+
+    try {
+        // creates a new page and navigate to an url
+
+        $page = $browser->createPage();
+        $page->getSession()->sendMessage(new Message(
+            'Network.setExtraHTTPHeaders',
+            ['headers' => ['Referer' => 'https://www.btv.de']]
+
+        ));
+        $page->navigate($url)->waitForNavigation(Page::NETWORK_IDLE);
+
+
+        $html = $page->getHtml();
+
+        file_put_contents("C:\Users\andre\Desktop\\test.html", $html);
+        $t =   str_get_html($html);
+        echo "test";
+        // get page title
+        $pageTitle = $page->evaluate('document.title')->getReturnValue();
+    } finally {
+        // bye
+        $browser->close();
+    }
+
+
+    // Set debug flag
+
+
+    // $request->addHeader('Referer', 'https://www.btv.de/de');
+
+
+
+    return  str_get_html($html);
 }
 
 function startTeamSync($url)
 {
-    $teamsHTML = getHTML($url);
-    $teamsData = getTeamsDataFromHTML($teamsHTML);
+
     startScoreAndTableSync();
 }
 
 function startScoreAndTableSync()
 {
-    startScoreSync();
-    startTableSync();
+    // startScoreSync();
 }
 
 function startEventsSync()
@@ -292,7 +334,7 @@ function getTeamsDataFromHTML($html)
     //remove rows in table with no team information
     $teamData = getTeamDataFromHTMLRows($teamRows);
 
-    writeTeamDataToDB($teamData);
+    // writeTeamDataToDB($teamData);
 }
 
 function getTeamDataFromHTMLRows($teamRows)
@@ -357,8 +399,10 @@ function writeTeamDataToDB($teamData)
 function startScoreSync()
 {
     $teamData = getTeamDataFromDB();
-    $teamScores = getTeamScores($teamData);
-    writeScoreInTeamTable($teamScores);
+    $teamScores = getTeamData($teamData);
+    echo $teamScores;
+    #  writeScoreInTeamTable($teamScores["scores"]);
+    # writeTeamTableInDBTable($teamScores["teamTable"]);
 }
 
 function getTeamDataFromDB()
@@ -369,92 +413,158 @@ function getTeamDataFromDB()
     return $teamData;
 }
 
-function getTeamScores($teamData)
+function getTeamData($teamData)
 {
+    $result = array();
     $teamScores = array();
+    $teamRankings = array();
     foreach ($teamData as $team) {
-        $teamScoreHTML = getHtml($team->teamUrl);
-        $scoreTable = $teamScoreHTML->find("table.result-set")[1];
-        $scores = getScoresFromTable($scoreTable);
-        $teamScores[$team->teamId] = $scores;
+        $detailUrl = "https://btv-prod.burdadigitalsystems.de/btvgroup/?groupid=" . $team->groupId;
+        $groupHtml = getHtml($detailUrl);
+
+        $section = $groupHtml->find("section")[0];
+        return $groupHtml;
+        // $scoreTable = $section->children(0)->children(1)->children(0)->children(5);
+        // $scores = getScoresFromTable($scoreTable);
+        // $teamScores[$team->teamId] = $scores;
+        // $rankingTable = $section->children(0)->children(1)->children(0)->children(1)->children(1)->children(0);
+        // $teamTable = getTeamsTable($rankingTable);
+        // $teamRankings[$team->teamId] = $teamTable;
     }
-    return $teamScores;
+    // $result["scores"] = $teamScores;
+    // $result["teamTable"] = $teamRankings;
+
+    return $result;
 }
 
 function getScoresFromTable($table)
 {
-    $teamScores = [];
-    $scoreTableRows = $table->find("tr");
-    //remove header
-    $header =  array_shift($scoreTableRows);
 
-    foreach ($scoreTableRows as $scoreRow) {
-        $additionalIndex = 0;
-        //handle case if "Spielort" is included
-        if (count($header->find("th")) > 5) {
-            $additionalIndex = 1;
+    $divElements =  $table->children();
+
+    $currentScoreTime = "";
+
+    $scores = array();
+
+
+    foreach ($divElements as $divElement) {
+
+        $scoreTime = checkGetDateFromDiv($divElement);
+        if ($scoreTime > 0) {
+            $currentScoreTime = $scoreTime;
+        } else {
+            $score = getScoreFromRow($divElement, $currentScoreTime);
         }
 
-        $score = getScoreFromRow($scoreRow, $additionalIndex);
-        array_push($teamScores, $score);
+        if ($score != null) {
+            array_push($scores, $score);
+        }
     }
-    return $teamScores;
+    return $scores;
 }
 
-function getScoreFromRow($scoreRow, $additionalIndex)
+function getTeamsTable($table)
 {
 
-    $scoreTime = $scoreRow->children(1)->plaintext;
+    $divElements =  $table->children();
 
-    $scoreHostTeam = $scoreRow->children(2 + $additionalIndex)->plaintext;
-    $scoreHostTeamURL = "";
-    if ($scoreHostTag = $scoreRow->children(2 + $additionalIndex)->find("a")) {
-        $scoreHostTeam = $scoreHostTag[0]->plaintext;
-        $scoreHostTeamURL = $scoreHostTag[0]->attr["href"];;
+
+    $ranking = array();
+
+
+    foreach ($divElements as $divElement) {
+
+        $team = getNthChildInTree($divElement, 5);
+        if ($team != null) {
+            $rank = $team[0]->plaintext;
+            $teamname = $team[2]->plaintext;
+            $teamMatches = $team[3]->children(0)->children(0)->plaintext;
+            $points = $team[3]->children(0)->children(1)->plaintext;
+            $matchPoints = $team[3]->children(0)->children(2)->plaintext;
+            $sets = $team[3]->children(0)->children(3)->plaintext;
+            $rankingData = array(
+                'ranking' =>  adaptString($rank),
+                'teamName' =>  adaptString($teamname),
+                'matches' =>  adaptString($teamMatches),
+                'points' =>  adaptString($points),
+                'matchPoints' =>  adaptString($matchPoints),
+                'sets' =>  adaptString($sets)
+            );
+
+            array_push($ranking, $rankingData);
+        }
+    }
+    return $ranking;
+}
+
+
+
+
+function checkGetDateFromDiv($element)
+{
+    if (count($element->children()) == 1) {
+        $child = $element->children(0);
+        if ($child->tag == "span") {
+            $dateText  = $child->plaintext;
+            $dateTextNew = trim(strstr($dateText, " "));
+            $dateInMilliSeconds = DateTime::createFromFormat('d.m.y, H:i', adaptString($dateTextNew), new DateTimeZone("Europe/Berlin"))->getTimestamp() * 1000;
+            return $dateInMilliSeconds;
+        }
     }
 
-    $scoreGuestTeam = $scoreRow->children(3 + $additionalIndex)->plaintext;
-    $scoreGuestTeamURL = "";
-    if ($scoreGuestTag = $scoreRow->children(3 + $additionalIndex)->find("a")) {
-        $scoreGuestTeam = $scoreGuestTag[0]->plaintext;
-        $scoreGuestTeamURL = $scoreGuestTag[0]->attr["href"];
+    return -1;
+}
+
+function getScoreFromRow($element, $currentScoreTime)
+{
+
+    $scoreData = array();
+    if (count($element->children()) == 2) {
+        $scoreRow = getNthChildInTree($element, 7);
+        if ($scoreRow != null) {
+            $teams = getNthChildInTree($scoreRow[1], 1);
+            if ($teams != null) {
+                $hostTeamName = trim($teams[0]->plaintext);
+                $guestTeamName = trim($teams[1]->plaintext);
+            }
+            $score = getNthChildInTree($scoreRow[2], 3);
+            if ($score != null) {
+                $hostScore = trim($score[0]->plaintext);
+                $guestScore = trim($score[1]->plaintext);
+            }
+        }
+        $test = 0;
+
+
+
+        if (
+            str_contains($guestTeamName, "TSV 1860 Rosenheim") || str_contains($guestTeamName, "Rosenheimer Unterstützungskasse") ||
+            str_contains($hostTeamName, "TSV 1860 Rosenheim") || str_contains($hostTeamName, "Rosenheimer Unterstützungskasse")
+        ) {
+
+            $scoreData = array(
+                'scoreDateTime' =>  $currentScoreTime,
+                'scoreHostTeam' =>  adaptString($hostTeamName),
+                'scoreGuestTeam' =>  adaptString($guestTeamName),
+                'scoreMatchPoints' =>  adaptString($hostScore . ":" . $guestScore)
+            );
+            return $scoreData;
+        } else {
+            return null;
+        }
     }
+}
 
-    $scoreMatchPoints = $scoreRow->children(4 + $additionalIndex)->plaintext;
-
-    $scoreReportURL = "";
-    if ($scoreReportTag = $scoreRow->children(5 + $additionalIndex)->find("a")) {
-        $scoreReportURL = $scoreReportTag[0]->attr["href"];
+function getNthChildInTree($element, $nthIndex)
+{
+    if ($element == null) {
+        return null;
     }
-    $dateInMilliSeconds = DateTime::createFromFormat('d.m.Y H:i', adaptString($scoreTime), new DateTimeZone("Europe/Berlin"))
-        ->getTimestamp() * 1000;
-    $scoreData = array(
-        'scoreDateTime' =>  $dateInMilliSeconds,
-        'scoreHostTeam' =>  adaptString($scoreHostTeam),
-        'scoreGuestTeam' =>  adaptString($scoreGuestTeam),
-        'scoreMatchPoints' =>  adaptString($scoreMatchPoints),
-
-
-
-    );
-
-    if (adaptString($scoreHostTeamURL) !== "") {
-        $scoreHostTeamURL =  adaptString(NU_LIGA_HOST . $scoreHostTeamURL);
+    if ($nthIndex == 0) {
+        return $element->children();
+    } else {
+        return getNthChildInTree($element->children(0), $nthIndex - 1);
     }
-    $scoreData["scoreHostTeamURL"] = $scoreHostTeamURL;
-
-    if (adaptString($scoreGuestTeamURL) !== "") {
-        $scoreGuestTeamURL =  adaptString(NU_LIGA_HOST . $scoreGuestTeamURL);
-    }
-    $scoreData["scoreGuestTeamURL"] = $scoreGuestTeamURL;
-
-
-    if (adaptString($scoreReportURL) !== "") {
-        $scoreReportURL =  adaptString(NU_LIGA_HOST . $scoreReportURL);
-    }
-    $scoreData["scoreReportURL"] = $scoreReportURL;
-
-    return $scoreData;
 }
 
 function adaptString($text)
@@ -497,67 +607,7 @@ function writeTeamTableInDBTable($teamTable)
     }
 }
 
-function startTableSync()
-{
-    $teamData = getTeamDataFromDB();
-    $teamTables = getTeamTables($teamData);
-    writeTeamTableInDBTable($teamTables);
-}
 
-function getTeamTables($teamData)
-{
-    $teamTables = array();
-    foreach ($teamData as $team) {
-        $teamTableHTML = getHtml($team->groupUrl);
-        $scoreTable = $teamTableHTML->find("table.result-set")[0];
-        $tableData = getDataFromTable($scoreTable);
-        $teamTables[$team->teamId] = $tableData;
-    }
-    return $teamTables;
-}
-
-function getDataFromTable($table)
-{
-    $tablePositions = [];
-    $tableRows = $table->find("tr");
-    //remove header
-    array_shift($tableRows);
-    foreach ($tableRows as $tableRow) {
-        $data = getDataFromTableRow($tableRow);
-        array_push($tablePositions, $data);
-    }
-    return $tablePositions;
-}
-
-function getDataFromTableRow($tableRow)
-{
-    $ranking = $tableRow->children(1)->plaintext;
-
-    $teamName = $tableRow->children(2)->find("a")[0]->plaintext;
-    $teamUrl = $tableRow->children(2)->find("a")[0]->attr["href"];;
-    $matches =  $tableRow->children(3)->plaintext;
-    $wins =  $tableRow->children(4)->plaintext;
-    $loses =  $tableRow->children(5)->plaintext;
-    $draws =  $tableRow->children(6)->plaintext;
-    $points =  $tableRow->children(7)->plaintext;
-    $matchPoints =  $tableRow->children(8)->plaintext;
-    $sets =  $tableRow->children(9)->plaintext;
-    $games =  $tableRow->children(10)->plaintext;
-
-
-
-    $scoreData = array(
-        'ranking' =>  adaptString($ranking),
-        'teamUrl' =>  adaptString(NU_LIGA_HOST . $teamUrl),
-        'teamName' =>  adaptString($teamName),
-        'matches' =>  adaptString($matches),
-        'points' =>  adaptString($points),
-        'matchPoints' =>  adaptString($matchPoints),
-        'sets' =>  adaptString($sets),
-        'games' =>  adaptString($games)
-    );
-    return $scoreData;
-}
 
 function score_cron_schedules($schedules)
 {
@@ -664,3 +714,6 @@ function include_customfields_query($posts)
 
     return $posts;
 }
+
+
+startScoreSync();

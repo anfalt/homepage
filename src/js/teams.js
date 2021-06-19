@@ -46,7 +46,7 @@
             <th scope="col">Punkte</th>
             <th scope="col">Matchbilanz</th>
             <th scope="col">Sätze</th>
-            <th scope="col">Spiele</th>
+  
           </tr>
         </thead>
         <tbody>
@@ -137,8 +137,8 @@
                   </div>
                   <div class="card-body">
                     <ul class="list-group list-group-flush">
-                      <li class="list-group-item"><b>Liga:</b> <a href="${
-                        team.groupUrl
+                      <li class="list-group-item"><b>Liga:</b> <a href="https://www.btv.de/de/spielbetrieb/tabelle-spielplan.html?groupid=${
+                        team.groupId
                       }" target="_blank">${team.groupName}</a></li>
                       <li class="list-group-item"><b>Tabellen Postition:</b> ${
                         teamRanking.ranking
@@ -214,7 +214,6 @@
         <td>${teamRank.points}</td>
         <td>${teamRank.matchPoints}</td>
         <td>${teamRank.sets}</td>
-        <td>${teamRank.games}</td>
       </tr>`;
     }
 
@@ -229,7 +228,6 @@
           <th scope="col">Heimannschaft</th>
           <th scope="col">Gastmannschaft</th>
           <th scope="col">Matchpunkte</th>
-          <th scope="col">Spielbericht</th>
         </tr>
       </thead>
       <tbody>
@@ -306,11 +304,6 @@
       ${createLinkTag(teamScore.scoreGuestTeamURL, teamScore.scoreGuestTeam)}
       </td>
       <td>${teamScore.scoreMatchPoints}</td>
-      <td> ${createLinkTag(
-        teamScore.scoreReportURL,
-        "Spielbericht öffnen",
-        true
-      )}</td>
     </tr>`;
     }
 
